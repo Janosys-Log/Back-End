@@ -7,8 +7,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -42,22 +40,25 @@ public class Veiculo {
     private Integer anoFabricacao;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_veiculo", length = 50)
-    private TipoVeiculo tipoVeiculo;
+    @Column(name = "tipo_veiculo", length = 30)
+    private TipoVeiculos tipoVeiculo;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "categoria_veiculo", length = 30)
+    private CategoriaVeiculo categoria;
+
+    @Size(max = 50, message = "O subtipo do veículo deve ter no máximo 50 caracteres")
     @Column(name = "subtipo_veiculo", length = 50)
-    private SubtipoVeiculo subtipoVeiculo;
+    private String subtipoVeiculo;
 
     @NotNull(message = "O agregado proprietário é obrigatório")
     @Column(name = "agregado_id", nullable = false)
     private Long agregadoId;
 
-    @PrePersist
-    @PreUpdate
-    private void preencherTipoAutomatico() {
-        if (this.subtipoVeiculo != null && this.tipoVeiculo == null) {
-            this.tipoVeiculo = this.subtipoVeiculo.getTipo();
+    public void setTipoVeiculo(TipoVeiculos tipoVeiculo) {
+        this.tipoVeiculo = tipoVeiculo;
+        if (tipoVeiculo != null) {
+            this.categoria = tipoVeiculo.getCategoria();
         }
     }
 }
