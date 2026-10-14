@@ -44,4 +44,3 @@ public enum SubtipoVeiculo {
                 .collect(Collectors.toList());
     }
 }
-
