@@ -11,11 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-/**
- * Serviço do status do motorista.
- * Contém a lógica de negócio e permanece isolado no pacote statusMotorista
- * para facilitar futura migração para microsserviço.
- */
 @Service
 public class StatusMotoristasService {
     private final MotoristaRepository motoristaRepository;
@@ -31,10 +26,11 @@ public class StatusMotoristasService {
 
         if (motorista.getStatus() == StatusMotorista.Disponivel
                 && (statusDTO.getStatus() != StatusMotorista.Em_Rota
-                        || statusDTO.getStatus() != StatusMotorista.Indisponivel))
+                        && statusDTO.getStatus() != StatusMotorista.Indisponivel))
             throw new FluxoStatusNaoEsperadoException(statusDTO.getStatus());
 
         motorista.atualizaStatus(statusDTO.getStatus());
+        motoristaRepository.save(motorista);
 
         return new ResponseEntity<String>("Status alterado com sucesso", HttpStatus.NO_CONTENT);
     }
