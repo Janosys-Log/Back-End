@@ -2,12 +2,15 @@ package com.fleetops.usuario.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,9 +32,6 @@ public class Usuario {
     @Column(name = "id_usuario")
     private Long idUsuario;
 
-    @Column(name = "permissao_gerente")
-    private Boolean permissaoGerente;
-
     @NotBlank(message = "O nome de usuário é obrigatório")
     @Size(max = 100, message = "O nome de usuário deve ter no máximo 100 caracteres")
     @Column(name = "nome_usuario", length = 100, nullable = false)
@@ -48,7 +48,12 @@ public class Usuario {
     @Column(name = "senha_usuario", length = 255, nullable = false)
     private String senhaUsuario;
 
-    @Size(max = 50, message = "O perfil de acesso deve ter no máximo 50 caracteres")
-    @Column(name = "perfil_acesso", length = 50)
-    private String perfilAcesso;
+    @NotNull(message = "O perfil de acesso é obrigatório")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "perfil_acesso", length = 20, nullable = false)
+    private PerfilAcesso perfilAcesso;
+
+    @Builder.Default
+    @Column(name = "ativo", nullable = false)
+    private Boolean ativo = true;
 }

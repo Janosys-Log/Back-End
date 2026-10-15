@@ -1,6 +1,11 @@
 package com.fleetops.usuario.repository;
 
 import com.fleetops.usuario.domain.Usuario;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UsuarioRepository extends JpaRepository<Usuario, Long> {}
+public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
+    Optional<Usuario> findByEmailUsuario(String emailUsuario);
+
+    boolean existsByEmailUsuario(String emailUsuario);
+}
