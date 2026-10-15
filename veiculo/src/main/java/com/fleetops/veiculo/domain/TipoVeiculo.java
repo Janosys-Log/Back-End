@@ -15,4 +15,3 @@ public enum TipoVeiculo {
         this.descricao = descricao;
     }
 }
-

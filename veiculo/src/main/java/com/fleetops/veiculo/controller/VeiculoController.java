@@ -40,7 +40,8 @@ public class VeiculoController {
     }
 
     @PostMapping
-    public ResponseEntity<Veiculo> criar(@RequestBody Veiculo novoVeiculo) {
+    public ResponseEntity<Veiculo> criar(@jakarta.validation.Valid @RequestBody Veiculo novoVeiculo) {
+        novoVeiculo.setIdVeiculo(null);
         Veiculo salvo = repositorio.save(novoVeiculo);
         return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
