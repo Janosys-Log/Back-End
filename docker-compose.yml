@@ -16,7 +16,10 @@ services:
       timeout: 5s
       retries: 20
       start_period: 20s
+    restart: on-failure
+
   servico-usuario:
+    container_name: servico_usuario
     build: 
       context: .
       dockerfile: usuario/Dockerfile
@@ -25,18 +28,36 @@ services:
     depends_on:
       mysql-db:
          condition: service_healthy
+      rabbitmq:
+               condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/usuario
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: rabbit
+      SPRING_RABBITMQ_PASSWORD: rabbit
     restart: on-failure
+
   servico-csvjson:
+     container_name: servico_csvjson
      build: 
        context: .
        dockerfile: CsvParaJson/Dockerfile
+     depends_on:
+         rabbitmq:
+               condition: service_healthy
+     environment:
+           SPRING_RABBITMQ_HOST: rabbitmq
+           SPRING_RABBITMQ_PORT: 5672
+           SPRING_RABBITMQ_USERNAME: rabbit
+           SPRING_RABBITMQ_PASSWORD: rabbit
      ports:
       - "8080:8080"
+
   servico-manifesto:
+       container_name: servico_manifesto
        build:
          context: . 
          dockerfile: manifesto/Dockerfile
@@ -45,26 +66,21 @@ services:
        depends_on:
           mysql-db:
             condition: service_healthy
+          rabbitmq:
+               condition: service_healthy
        environment:
           SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/manifesto
           SPRING_DATASOURCE_USERNAME: root
           SPRING_DATASOURCE_PASSWORD: root
+          SPRING_RABBITMQ_HOST: rabbitmq
+          SPRING_RABBITMQ_PORT: 5672
+          SPRING_RABBITMQ_USERNAME: rabbit
+          SPRING_RABBITMQ_PASSWORD: rabbit
        restart: on-failure 
-  servico-agregado:
-      build:
-        context: . 
-        dockerfile: agregado/Dockerfile
-      ports:
-       - "8083:8083"
-      depends_on:
-        mysql-db:
-            condition: service_healthy 
-      environment:
-          SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/agregado
-          SPRING_DATASOURCE_USERNAME: root
-          SPRING_DATASOURCE_PASSWORD: root
-      restart: on-failure
+
+
   servico-avaliacao:
+        container_name: servico_avaliacao
         build: 
           context: . 
           dockerfile: avaliacao/Dockerfile 
@@ -73,44 +89,56 @@ services:
         depends_on:
             mysql-db: 
                 condition: service_healthy 
+            rabbitmq:
+               condition: service_healthy
         environment:
                   SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/avaliacao
                   SPRING_DATASOURCE_USERNAME: root
                   SPRING_DATASOURCE_PASSWORD: root
+                  SPRING_RABBITMQ_HOST: rabbitmq
+                  SPRING_RABBITMQ_PORT: 5672
+                  SPRING_RABBITMQ_USERNAME: rabbit
+                  SPRING_RABBITMQ_PASSWORD: rabbit
         restart: on-failure 
-  servico-motorista:
-      build:
-         context: . 
-         dockerfile: motorista/Dockerfile
-      ports:
-        - "8085:8085"
-      depends_on:
-         mysql-db:
-           condition: service_healthy
-      environment:
-                  SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/motorista
-                  SPRING_DATASOURCE_USERNAME: root
-                  SPRING_DATASOURCE_PASSWORD: root
-      restart: on-failure    
-  service-veiculo:
+ 
+
+  service-motorista:
+       container_name: servico_motorista
        build:
          context: . 
-         dockerfile: veiculo/Dockerfile
+         dockerfile: servicoMotorista/Dockerfile
        ports:
          - "8086:8086"
        depends_on:
           mysql-db:
              condition: service_healthy
+          rabbitmq:
+               condition: service_healthy
        environment:
                   SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/veiculo
                   SPRING_DATASOURCE_USERNAME: root
                   SPRING_DATASOURCE_PASSWORD: root
+                  SPRING_RABBITMQ_HOST: rabbitmq
+                  SPRING_RABBITMQ_PORT: 5672
+                  SPRING_RABBITMQ_USERNAME: rabbit
+                  SPRING_RABBITMQ_PASSWORD: rabbit
        restart: on-failure    
-
-
+  rabbitmq:
+     container_name: rabbit_janosys
+     image: rabbitmq:3.13
+     restart: on-failure
+     healthcheck:
+        test: ["CMD","rabbitmq-diagnostics", "ping"]
+        interval: 10s
+        timeout: 5s
+        retries: 5 
+        start_period: 20s
+     environment:
+      RABBITMQ_DEFAULT_USER: rabbit
+      RABBITMQ_DEFAULT_PASS: rabbit
+      RABBITMQ_DEFAULT_VHOST: /
+     ports:
+      - "5672:5672"
     
-  
-    
-
 volumes:
   mysql_data:

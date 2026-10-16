@@ -22,10 +22,8 @@
     <modules>
         <module>avaliacao</module>
         <module>CsvParaJson</module>
-        <module>motorista</module>
-        <module>veiculo</module>
+        <module>servicoMotorista</module>
 				<module>usuario</module>
-				<module>agregado</module>
 				<module>manifesto</module>
     </modules>
 
