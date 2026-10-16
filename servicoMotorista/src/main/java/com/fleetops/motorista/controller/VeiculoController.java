@@ -9,12 +9,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fleetops.motorista.domain.SubtipoVeiculo;
 import com.fleetops.motorista.domain.TipoVeiculo;
 import com.fleetops.motorista.domain.Veiculo;
 import com.fleetops.motorista.repository.VeiculoRepository;
+import com.fleetops.motorista.domain.TipoVeiculos;
+import com.fleetops.motorista.domain.CategoriaVeiculo;
 
 @RestController
 @RequestMapping("/api/veiculos")
@@ -28,7 +31,15 @@ public class VeiculoController {
     }
 
     @GetMapping
-    public List<Veiculo> listarTodos() {
+    public List<Veiculo> listar(
+            @RequestParam(required = false) CategoriaVeiculo categoria,
+            @RequestParam(required = false) TipoVeiculos tipo) {
+        if (tipo != null) {
+            return repositorio.findByTipoVeiculo(tipo);
+        }
+        if (categoria != null) {
+            return repositorio.findByCategoria(categoria);
+        }
         return repositorio.findAll();
     }
 
@@ -42,22 +53,20 @@ public class VeiculoController {
 
     @PostMapping
     public ResponseEntity<Veiculo> criar(@RequestBody Veiculo novoVeiculo) {
+        if (novoVeiculo.getTipoVeiculo() != null && novoVeiculo.getCategoria() == null) {
+            novoVeiculo.setCategoria(novoVeiculo.getTipoVeiculo().getCategoria());
+        }
         Veiculo salvo = repositorio.save(novoVeiculo);
         return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
 
     @GetMapping("/tipo/{tipo}")
-    public List<Veiculo> listarPorTipo(@PathVariable("tipo") TipoVeiculo tipo) {
+    public List<Veiculo> listarPorTipo(@PathVariable TipoVeiculos tipo) {
         return repositorio.findByTipoVeiculo(tipo);
     }
 
-    @GetMapping("/subtipo/{subtipo}")
-    public List<Veiculo> listarPorSubtipo(@PathVariable("subtipo") SubtipoVeiculo subtipo) {
-        return repositorio.findBySubtipoVeiculo(subtipo);
-    }
-
-    @GetMapping("/subtipos-por-tipo/{tipo}")
-    public List<SubtipoVeiculo> listarSubtiposPorTipo(@PathVariable("tipo") TipoVeiculo tipo) {
-        return SubtipoVeiculo.listarPorTipo(tipo);
+    @GetMapping("/categoria/{categoria}")
+    public List<Veiculo> listarPorCategoria(@PathVariable CategoriaVeiculo categoria) {
+        return repositorio.findByCategoria(categoria);
     }
 }

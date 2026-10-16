@@ -12,11 +12,6 @@ import com.fleetops.motorista.exceptions.FluxoStatusNaoEsperadoException;
 import com.fleetops.motorista.exceptions.MotoristaNaoEncontradoException;
 import com.fleetops.motorista.repository.MotoristaRepository;
 
-/**
- * Serviço do status do motorista.
- * Contém a lógica de negócio e permanece isolado no pacote statusMotorista
- * para facilitar futura migração para microsserviço.
- */
 @Service
 public class StatusMotoristasService {
     private final MotoristaRepository motoristaRepository;
@@ -32,10 +27,11 @@ public class StatusMotoristasService {
 
         if (motorista.getStatus() == StatusMotorista.Disponivel
                 && (statusDTO.getStatus() != StatusMotorista.Em_Rota
-                        || statusDTO.getStatus() != StatusMotorista.Indisponivel))
+                        && statusDTO.getStatus() != StatusMotorista.Indisponivel))
             throw new FluxoStatusNaoEsperadoException(statusDTO.getStatus());
 
         motorista.atualizaStatus(statusDTO.getStatus());
+        motoristaRepository.save(motorista);
 
         return new ResponseEntity<String>("Status alterado com sucesso", HttpStatus.NO_CONTENT);
     }

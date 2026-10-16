@@ -44,12 +44,16 @@ public class Veiculo {
     private String placaVeiculo;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_veiculo", length = 50)
-    private TipoVeiculo tipoVeiculo;
+    @Column(name = "tipo_veiculo", length = 30)
+    private TipoVeiculos tipoVeiculo;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "categoria_veiculo", length = 30)
+    private CategoriaVeiculo categoria;
+
+    @Size(max = 50, message = "O subtipo do veículo deve ter no máximo 50 caracteres")
     @Column(name = "subtipo_veiculo", length = 50)
-    private SubtipoVeiculo subtipoVeiculo;
+    private String subtipoVeiculo;
 
     @NotNull(message = "O agregado proprietário é obrigatório")
     @Column(name = "agregado_id", nullable = false)

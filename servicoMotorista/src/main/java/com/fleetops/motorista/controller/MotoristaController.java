@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fleetops.motorista.domain.Motorista;
@@ -27,8 +28,24 @@ public class MotoristaController {
     }
 
     @GetMapping
-    public List<Motorista> listarTodos() {
-        return motoristaRepository.findAll();
+    public ResponseEntity<?> listar(
+            @RequestParam(required = false) StatusMotorista status,
+            @RequestParam(required = false) List<Long> veiculoIds) {
+        List<Motorista> resultado;
+        if (status != null && veiculoIds != null && !veiculoIds.isEmpty()) {
+            resultado = motoristaRepository.findByStatusAndVeiculoIdIn(status, veiculoIds);
+        } else if (status != null) {
+            resultado = motoristaRepository.findByStatus(status);
+        } else if (veiculoIds != null && !veiculoIds.isEmpty()) {
+            resultado = motoristaRepository.findByVeiculoIdIn(veiculoIds);
+        } else {
+            resultado = motoristaRepository.findAll();
+        }
+        if (resultado.isEmpty()) {
+            return ResponseEntity.ok(
+                    Collections.singletonMap("mensagem", "Nenhum motorista encontrado para os filtros selecionados."));
+        }
+        return ResponseEntity.ok(resultado);
     }
 
     @GetMapping("/disponiveis")
@@ -49,23 +66,4 @@ public class MotoristaController {
         Motorista salvo = motoristaRepository.save(novoMotorista);
         return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
-
-    // @PatchMapping("/{id}/status")
-    // public ResponseEntity<Motorista> atualizarStatus(@PathVariable Long id,
-    // @RequestBody Map<String, String> payload)
-    // {
-    // return motoristaRepository
-    // .findById(id)
-    // .map(motorista -> {
-    // if (payload.containsKey("status")) {
-    // // Converte o texto recebido no JSON para o Enum correspondente:
-    // StatusMotorista novoStatus =
-    // StatusMotorista.valueOf(payload.get("status").toUpperCase());
-    // motorista.setStatus(novoStatus);
-    // }
-    // Motorista atualizado = motoristaRepository.save(motorista);
-    // return ResponseEntity.ok(atualizado);
-    // })
-    // .orElse(ResponseEntity.notFound().build());
-    // }
 }
