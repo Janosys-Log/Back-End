@@ -37,10 +37,4 @@ public class AgregadoController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-
-    @PostMapping
-    public ResponseEntity<Agregado> criar(@RequestBody Agregado novoAgregado) {
-        Agregado salvo = repositorio.save(novoAgregado);
-        return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
-    }
 }

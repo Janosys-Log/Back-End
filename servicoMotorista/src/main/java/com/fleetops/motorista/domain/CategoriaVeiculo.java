@@ -1,4 +1,4 @@
-package com.fleetops.veiculo.domain;
+package com.fleetops.motorista.domain;
 
 public enum CategoriaVeiculo {
     URBANOS_EXPRESS,

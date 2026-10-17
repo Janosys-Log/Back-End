@@ -26,7 +26,7 @@ public class ServicoVeiculo {
             Veiculo veiculoparasalvar=new Veiculo();
             if(existe(veiculo.getPlaca())){
              veiculoparasalvar=Repo.findByplacaVeiculo(veiculo.getPlaca());
-             veiculoparasalvar.setTipoVeiculo(veiculo.getTipoVeiculo());
+             veiculoparasalvar.setTipoVeiculo(veiculo.getSubtipoVeiculo().getTipo());
             veiculoparasalvar.setSubtipoVeiculo(veiculo.getSubtipoVeiculo());
             veiculoparasalvar.setPlacaVeiculo(veiculo.getPlaca());
             Repo.save(veiculoparasalvar);
@@ -34,7 +34,7 @@ public class ServicoVeiculo {
             }
             Agregado agregado=servicoagregado.pegarPorCnpj(veiculo.getCnpjagregado());
             veiculoparasalvar.setAgregadoId(agregado.getIdAgregado());
-            veiculoparasalvar.setTipoVeiculo(veiculo.getTipoVeiculo());
+            veiculoparasalvar.setTipoVeiculo(veiculo.getSubtipoVeiculo().getTipo());
             veiculoparasalvar.setSubtipoVeiculo(veiculo.getSubtipoVeiculo());
             veiculoparasalvar.setPlacaVeiculo(veiculo.getPlaca());
             Repo.save(veiculoparasalvar);

@@ -69,12 +69,8 @@ public class Motorista {
     @Builder.Default
     private Float notaMedia = 0.0f;
 
-    /**
-     * ID do veiculo ao qual o motorista está vinculado.
-     * Mantido como Long (sem @OneToOne) para baixo acoplamento
-     * e facilitar migração para microsserviço.
-     */
-    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER,orphanRemoval = true)
+   
+    @OneToOne(fetch = FetchType.EAGER,orphanRemoval = true)
     @JoinColumn(name = "veiculo_id", unique = true)
     private Veiculo veiculo;
     
@@ -84,9 +80,8 @@ public class Motorista {
      * e facilitar migração para microsserviço.
      */
     @NotNull(message = "O agregado ao qual o motorista pertence é obrigatório")
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "agregado_id")
-    private Agregado agregadoId;
+    @Column(name = "agregado_id")
+    private Long agregadoId;
 
     public void atualizaStatus(StatusMotorista status) {
         this.status = status;

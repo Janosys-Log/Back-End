@@ -1,5 +1,5 @@
 package com.fleetops.motorista.controller;
-
+import java.util.Collections;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,11 +33,11 @@ public class MotoristaController {
             @RequestParam(required = false) List<Long> veiculoIds) {
         List<Motorista> resultado;
         if (status != null && veiculoIds != null && !veiculoIds.isEmpty()) {
-            resultado = motoristaRepository.findByStatusAndVeiculoIdIn(status, veiculoIds);
+            resultado = motoristaRepository.findByStatusAndVeiculoIdVeiculoIn(status, veiculoIds);
         } else if (status != null) {
             resultado = motoristaRepository.findByStatus(status);
         } else if (veiculoIds != null && !veiculoIds.isEmpty()) {
-            resultado = motoristaRepository.findByVeiculoIdIn(veiculoIds);
+            resultado = motoristaRepository.findByVeiculoIdVeiculoIn(veiculoIds);
         } else {
             resultado = motoristaRepository.findAll();
         }

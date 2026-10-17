@@ -16,7 +16,6 @@ import com.fleetops.motorista.domain.SubtipoVeiculo;
 import com.fleetops.motorista.domain.TipoVeiculo;
 import com.fleetops.motorista.domain.Veiculo;
 import com.fleetops.motorista.repository.VeiculoRepository;
-import com.fleetops.motorista.domain.TipoVeiculos;
 import com.fleetops.motorista.domain.CategoriaVeiculo;
 
 @RestController
@@ -32,13 +31,13 @@ public class VeiculoController {
 
     @GetMapping
     public List<Veiculo> listar(
-            @RequestParam(required = false) CategoriaVeiculo categoria,
-            @RequestParam(required = false) TipoVeiculos tipo) {
+            @RequestParam(required = false) TipoVeiculo tipo,
+            @RequestParam(required = false) SubtipoVeiculo subtipo) {
         if (tipo != null) {
             return repositorio.findByTipoVeiculo(tipo);
         }
-        if (categoria != null) {
-            return repositorio.findByCategoria(categoria);
+        if (subtipo != null) {
+            return repositorio.findBySubtipoVeiculo(subtipo);
         }
         return repositorio.findAll();
     }
@@ -51,22 +50,8 @@ public class VeiculoController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public ResponseEntity<Veiculo> criar(@RequestBody Veiculo novoVeiculo) {
-        if (novoVeiculo.getTipoVeiculo() != null && novoVeiculo.getCategoria() == null) {
-            novoVeiculo.setCategoria(novoVeiculo.getTipoVeiculo().getCategoria());
-        }
-        Veiculo salvo = repositorio.save(novoVeiculo);
-        return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
-    }
-
     @GetMapping("/tipo/{tipo}")
-    public List<Veiculo> listarPorTipo(@PathVariable TipoVeiculos tipo) {
+    public List<Veiculo> listarPorTipo(@PathVariable TipoVeiculo tipo) {
         return repositorio.findByTipoVeiculo(tipo);
-    }
-
-    @GetMapping("/categoria/{categoria}")
-    public List<Veiculo> listarPorCategoria(@PathVariable CategoriaVeiculo categoria) {
-        return repositorio.findByCategoria(categoria);
     }
 }

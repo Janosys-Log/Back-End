@@ -1,13 +1,20 @@
 package com.fleetops.motorista.domain;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
@@ -46,9 +53,13 @@ public class Agregado {
     @Column(name = "contato_agregado", length = 20)
     private String contatoAgregado;
 
-    @OneToMany(cascade = CascadeType.ALL,orphanRemoval = true,mappedBy ="agregadoId" )
-    private List<Motorista> motoristas=new ArrayList<Motorista>();
+    @OneToMany(cascade = CascadeType.ALL,orphanRemoval = true,fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SUBSELECT)
+    @JoinColumn(name = "agregado_id")
+    private Set<Motorista> motoristas=new HashSet<Motorista>();
 
-    @OneToMany(cascade = CascadeType.ALL,orphanRemoval = true,mappedBy = "agregado")
-    private List<Veiculo> veiculos=new ArrayList<Veiculo>();
+    @OneToMany(cascade = CascadeType.ALL,orphanRemoval = true,fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SUBSELECT)
+    @JoinColumn(name = "agregado_id", insertable = false, updatable = false)
+    private Set<Veiculo> veiculos=new HashSet<Veiculo>();
 }

@@ -1,4 +1,4 @@
-package com.fleetops.veiculo.domain;
+package com.fleetops.motorista.domain;
 
 public enum TipoVeiculos {
     FIORINO(CategoriaVeiculo.URBANOS_EXPRESS),
@@ -25,7 +25,6 @@ public enum TipoVeiculos {
     public CategoriaVeiculo getCategoria() {
         return categoria;
     }
-
     public static TipoVeiculos fromString(String value) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Tipo de veículo não informado");

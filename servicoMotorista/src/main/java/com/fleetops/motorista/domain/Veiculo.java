@@ -45,23 +45,15 @@ public class Veiculo {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_veiculo", length = 30)
-    private TipoVeiculos tipoVeiculo;
+    private TipoVeiculo tipoVeiculo;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "categoria_veiculo", length = 30)
-    private CategoriaVeiculo categoria;
-
-    @Size(max = 50, message = "O subtipo do veículo deve ter no máximo 50 caracteres")
-    @Column(name = "subtipo_veiculo", length = 50)
-    private String subtipoVeiculo;
+   @Column(name = "subtipo_veiculo", length = 50)
+    private SubtipoVeiculo subtipoVeiculo;
 
     @NotNull(message = "O agregado proprietário é obrigatório")
     @Column(name = "agregado_id", nullable = false)
     private Long agregadoId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "agregado_id", insertable = false, updatable = false)
-    private Agregado agregado;
 
     @PrePersist
     @PreUpdate

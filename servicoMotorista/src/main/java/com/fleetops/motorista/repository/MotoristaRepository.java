@@ -20,9 +20,9 @@ public interface MotoristaRepository extends JpaRepository<Motorista, Long> {
     Motorista findBycpfMotorista(String cpf);
 
     boolean existsByCpfMotorista(String cpf);
-    List<Motorista> findByStatusAndVeiculoIdIn(StatusMotorista status, List<Long> veiculoIds);
+    List<Motorista> findByStatusAndVeiculoIdVeiculoIn(StatusMotorista status, List<Long> ids);
 
-    List<Motorista> findByVeiculoIdIn(List<Long> veiculoIds);
+    List<Motorista> findByVeiculoIdVeiculoIn(List<Long> ids);
 
     @Query("SELECT m FROM Motorista m WHERE m.status = :status AND m.statusUpdatedAt <= :limite")
     List<Motorista> findIndisponiveisAntigos(

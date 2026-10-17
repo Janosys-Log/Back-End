@@ -24,28 +24,34 @@ public class ServicoMotorista {
      }
     
      public void SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(VeiculoDTO csvVeiculo){
+          
           Motorista motoristaBanco=new Motorista();
-          if (motoristaRepo.existsByCpfMotorista(csvVeiculo.getCpfmotorista())){
-                 motoristaBanco=motoristaRepo.findBycpfMotorista(csvVeiculo.getCpfmotorista());
-                 motoristaBanco.setContatoMotorista(csvVeiculo.getContatomotorista());
-                 Veiculo veiculo=new Veiculo();
-                 veiculo.setAgregado(servicoAgregado.pegarPorCnpj(csvVeiculo.getAgregado()));
+           Veiculo veiculo=new Veiculo();
+                 veiculo.setAgregadoId(servicoAgregado.pegarPorCnpj(csvVeiculo.getCnpjagregado()).getIdAgregado());
                  veiculo.setPlacaVeiculo(csvVeiculo.getPlaca());
                  veiculo.setSubtipoVeiculo(csvVeiculo.getSubtipoVeiculo());
-                 veiculo.setTipoVeiculo(csvVeiculo.getTipoVeiculo());
+                 veiculo.setTipoVeiculo(csvVeiculo.getSubtipoVeiculo().getTipo());
                  if(servicoVeiculo.existe(csvVeiculo.getPlaca())){
                   veiculo=servicoVeiculo.acharPorPlaca(csvVeiculo.getPlaca());
                  }
+                 
+          if (motoristaRepo.existsByCpfMotorista(csvVeiculo.getCpfmotorista())){
+                 motoristaBanco=motoristaRepo.findBycpfMotorista(csvVeiculo.getCpfmotorista());
+                 motoristaBanco.setContatoMotorista(csvVeiculo.getContatomotorista());
                  motoristaBanco.setVeiculo(veiculo);
                  motoristaRepo.save(motoristaBanco);
                  return;
                   
           }
+          motoristaBanco.setVeiculo(veiculo);
           motoristaBanco.setContatoMotorista(csvVeiculo.getContatomotorista());
           motoristaBanco.setCpfMotorista(csvVeiculo.getCpfmotorista());
           motoristaBanco.setNomeMotorista(csvVeiculo.getMotorista());
-          motoristaBanco.setAgregadoId( servicoAgregado.pegarPorCnpj(csvVeiculo.getCnpjagregado()));
+          motoristaBanco.setAgregadoId( servicoAgregado.pegarPorCnpj(csvVeiculo.getCnpjagregado()).getIdAgregado());
           motoristaRepo.save(motoristaBanco);
+    
+
+     
      }
      
 }
