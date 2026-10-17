@@ -16,7 +16,6 @@ public interface MotoristaRepository extends JpaRepository<Motorista, Long> {
     Optional<Motorista> findByIdMotorista(Long idMotorista);
 
     List<Motorista> findByStatus(StatusMotorista status);
-
     Motorista findBycpfMotorista(String cpf);
 
     boolean existsByCpfMotorista(String cpf);
