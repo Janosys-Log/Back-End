@@ -49,9 +49,9 @@ jobs:
           GH_TOKEN: ${{ secrets.PAT_APROVE }}
           PR_NUMBER: ${{ steps.pr_backend.outputs.pull-request-number }}
         run: |
-          gh pr comment "$PR_NUMBER" \
+          gh pr review "$PR_NUMBER" \
             --repo "${{ github.repository }}" \
-            --body "🤖 Submódulo Documentos atualizado automaticamente. Aguardando merge."
+            --approve
 
       - name: Automerge Pull Request
         if: steps.pr_backend.outputs.pull-request-number != ''
