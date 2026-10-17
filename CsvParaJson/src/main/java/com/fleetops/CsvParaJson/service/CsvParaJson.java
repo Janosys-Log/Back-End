@@ -1,21 +1,28 @@
 package com.fleetops.CsvParaJson.service;
 
+import com.fleetops.CsvParaJson.config.RabbitConfig;
 import com.fleetops.CsvParaJson.dto.response.ResultadoLinhasDoCsv;
 import com.fleetops.CsvParaJson.exceptions.tipos.ErrodeExtensao;
 import com.fleetops.CsvParaJson.exceptions.tipos.NaoFoiPossivelAcharEncoding;
 import com.fleetops.CsvParaJson.exceptions.tipos.NaoFoiPossivelLerArquivo;
 import com.univocity.parsers.common.processor.BeanListProcessor;
 import com.univocity.parsers.csv.CsvParser;
+
+import lombok.RequiredArgsConstructor;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.List;
+
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
+@RequiredArgsConstructor 
 public class CsvParaJson<T> {
     @Autowired
     private CriadorDeParse<T> criadorDeParser;
@@ -29,11 +36,15 @@ public class CsvParaJson<T> {
     @Autowired
     private VerificadorDeExtensao verificadorDeExtensao;
 
-    public ResultadoLinhasDoCsv<T> RetornarJson(MultipartFile arquivo, Class<T> tipo) {
+    private final RabbitTemplate rabbitmq;
+
+    public ResultadoLinhasDoCsv<T> RetornarJson(MultipartFile arquivo, Class<T> tipo, String filaParaEnviar) {
 
         List<T> objetos = this.LerCsv(arquivo, tipo);
 
         ResultadoLinhasDoCsv<T> resultado = validador.Validar(objetos);
+
+        rabbitmq.convertAndSend(RabbitConfig.Exchange, filaParaEnviar, resultado);
 
         return resultado;
     }
@@ -75,8 +86,9 @@ public class CsvParaJson<T> {
                     "O arquivo " + arquivo.getOriginalFilename() + " não foi lido", "Problema ao ler esse arquivo");
         }
 
-        List<T> veiculos = processador.getBeans();
-
-        return veiculos;
+        List<T> objetos = processador.getBeans();
+        
+        return objetos;
     }
+
 }
