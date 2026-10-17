@@ -58,6 +58,6 @@ jobs:
         uses: peter-evans/enable-pull-request-automerge@v3.0.0
         with:
           token: ${{ secrets.PAT_DISPATCH }}
-          repository: Janosys-Log/Front-End
+          repository: Janosys-Log/Back-End
           pull-request-number: ${{ steps.pr_backend.outputs.pull-request-number }}
           merge-method: squash
