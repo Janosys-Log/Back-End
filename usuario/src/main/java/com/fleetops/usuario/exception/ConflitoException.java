@@ -1,0 +1,7 @@
+package com.fleetops.usuario.exception;
+
+public class ConflitoException extends RuntimeException {
+    public ConflitoException(String mensagem) {
+        super(mensagem);
+    }
+}
