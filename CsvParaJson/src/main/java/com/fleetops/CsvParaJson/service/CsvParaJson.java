@@ -2,6 +2,7 @@ package com.fleetops.CsvParaJson.service;
 
 import com.fleetops.CsvParaJson.config.RabbitConfig;
 import com.fleetops.CsvParaJson.dto.response.ResultadoLinhasDoCsv;
+import com.fleetops.CsvParaJson.exceptions.tipos.ErroDeServicodeConsumo;
 import com.fleetops.CsvParaJson.exceptions.tipos.ErrodeExtensao;
 import com.fleetops.CsvParaJson.exceptions.tipos.NaoFoiPossivelAcharEncoding;
 import com.fleetops.CsvParaJson.exceptions.tipos.NaoFoiPossivelLerArquivo;
@@ -18,6 +19,7 @@ import java.util.List;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,7 +46,13 @@ public class CsvParaJson<T> {
 
         ResultadoLinhasDoCsv<T> resultado = validador.Validar(objetos);
 
-        rabbitmq.convertAndSend(RabbitConfig.Exchange, filaParaEnviar, resultado);
+       Boolean funcionou = rabbitmq.convertSendAndReceiveAsType(RabbitConfig.Exchange, 
+            filaParaEnviar, 
+            resultado,
+            new ParameterizedTypeReference<Boolean>() {});
+        if (funcionou==null){
+            throw new ErroDeServicodeConsumo("Problema ao salvar os dados do csv","Servico Não Respondeu");
+        }
 
         return resultado;
     }

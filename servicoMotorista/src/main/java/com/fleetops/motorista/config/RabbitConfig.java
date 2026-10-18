@@ -10,9 +10,11 @@ import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 @Configuration 
 public class RabbitConfig {
-    public static final  String fila="jsonVeiculos.queue";
+    public static final  String filaVeiculo="jsonVeiculos.queue";
+    public static  final String filaManifesto="manifesto.queue";
     public static final String Excharge="veiculo.excharge";
     public static final String routing_key_veiculosJson="retornojsonVeiculos.queue";
+    public  static final String routing_key_ManifestoJson="retornoJsonManifesto.queue";
 
      
     @Bean 
@@ -22,14 +24,26 @@ public class RabbitConfig {
     
 
     @Bean 
-    public Queue Fila(){
-        return QueueBuilder.durable(fila).build();
+    public Queue filaVeiculo(){
+        return QueueBuilder.durable(filaVeiculo).build();
+    }
+    @Bean  Queue filaManifesto(){
+        return QueueBuilder.durable(filaManifesto).build();
+    }
+  
+    @Bean 
+    public Binding bidingVeiculos(){
+        return BindingBuilder.bind(filaVeiculo()).to(excharge()).with(routing_key_veiculosJson);
     }
 
     @Bean 
-    public Binding bidingVeiculos(){
-        return BindingBuilder.bind(Fila()).to(excharge()).with(routing_key_veiculosJson);
+    public Binding bidingManifesto(){
+        return BindingBuilder.bind(filaManifesto()).to(excharge()).with(routing_key_ManifestoJson);
     }
+
+
+
+   
 
       @Bean
     public MessageConverter messageConverter() {

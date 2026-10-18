@@ -24,7 +24,7 @@
         <module>CsvParaJson</module>
         <module>servicoMotorista</module>
 				<module>usuario</module>
-				<module>manifesto</module>
+				
     </modules>
 
 

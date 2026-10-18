@@ -1,3 +1,4 @@
+
 package com.fleetops.motorista.ouvinte;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -5,9 +6,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fleetops.motorista.config.RabbitConfig;
+import com.fleetops.motorista.domain.Agregado;
+import com.fleetops.motorista.domain.Motorista;
+import com.fleetops.motorista.domain.Veiculo;
+import com.fleetops.motorista.ouvinte.dto.response.DadosDeIntegridadeDoServicoDeManifesto;
+import com.fleetops.motorista.ouvinte.dto.response.ManifestoDTO;
 import com.fleetops.motorista.ouvinte.dto.response.ResultadoLinhasDoCsv;
 import com.fleetops.motorista.ouvinte.dto.response.VeiculoDTO;
 import com.fleetops.motorista.service.ServicoAgregado;
+import com.fleetops.motorista.service.ServicoManifesto;
 import com.fleetops.motorista.service.ServicoMotorista;
 import com.fleetops.motorista.service.ServicoVeiculo;
 
@@ -21,17 +28,36 @@ public class OuvinteCsvParaJson {
 
      @Autowired 
      private ServicoMotorista servicoMotorista;
+
+     @Autowired 
+     private ServicoManifesto servicoManifesto;
      
-    @RabbitListener(queues = RabbitConfig.fila)
-    public void salvarDadosRebidos(ResultadoLinhasDoCsv<VeiculoDTO> JsonCsv){
+    @RabbitListener(queues = RabbitConfig.filaVeiculo)
+    public boolean salvarDadosRebidos(ResultadoLinhasDoCsv<VeiculoDTO> JsonCsv){
          for(VeiculoDTO veiculo: JsonCsv.getValidos()){
               servicoAgregado.SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(veiculo);
               servicoVeiculo.SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(veiculo);
               servicoMotorista.SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(veiculo);
+
              
              
          }
          System.out.println("Arquivo Gravado");
+         return true;
+
     }
 
+    @RabbitListener(queues = RabbitConfig.filaManifesto)
+    public boolean salvarDadosRebidosManifesto(ResultadoLinhasDoCsv<ManifestoDTO> Jsoncsv){
+      for (ManifestoDTO manifesto : Jsoncsv.getValidos()){
+           servicoManifesto.SalvaOuNaoNoBancoComAsInformacoesDoManifesto(manifesto);
+         }
+         System.out.println("Arquivo Gravado");
+         return true;
+       
+
+    }
+
+
+    
 }
