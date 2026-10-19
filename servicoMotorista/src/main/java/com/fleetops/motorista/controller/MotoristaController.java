@@ -41,10 +41,7 @@ public class MotoristaController {
         } else {
             resultado = motoristaRepository.findAll();
         }
-        if (resultado.isEmpty()) {
-            return ResponseEntity.ok(
-                    Collections.singletonMap("mensagem", "Nenhum motorista encontrado para os filtros selecionados."));
-        }
+        
         return ResponseEntity.ok(resultado);
     }
 
