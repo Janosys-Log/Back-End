@@ -38,6 +38,7 @@ services:
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: rabbit
       SPRING_RABBITMQ_PASSWORD: rabbit
+      APP_SECURITY_JWT_SECRET: ${JWT_SECRET}
     restart: on-failure
 
   servico-csvjson:
