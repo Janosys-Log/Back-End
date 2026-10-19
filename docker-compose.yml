@@ -51,6 +51,7 @@ services:
          service-motorista:
                  condition: service_healthy
      environment:
+           SERVER_PORT: 8080
            SPRING_RABBITMQ_HOST: rabbitmq
            SPRING_RABBITMQ_PORT: 5672
            SPRING_RABBITMQ_USERNAME: rabbit
@@ -72,6 +73,7 @@ services:
             rabbitmq:
                condition: service_healthy
         environment:
+                  SERVER_PORT: 8082
                   SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/avaliacao
                   SPRING_DATASOURCE_USERNAME: root
                   SPRING_DATASOURCE_PASSWORD: root
@@ -95,6 +97,7 @@ services:
           rabbitmq:
                condition: service_healthy
        environment:
+                  SERVER_PORT: 8083
                   SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/veiculo
                   SPRING_DATASOURCE_USERNAME: root
                   SPRING_DATASOURCE_PASSWORD: root
@@ -103,7 +106,7 @@ services:
                   SPRING_RABBITMQ_USERNAME: rabbit
                   SPRING_RABBITMQ_PASSWORD: rabbit
        healthcheck:
-          test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP || exit 1"]
+          test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health | grep -q UP || exit 1"]
           interval: 5s
           timeout: 5s
           retries: 20

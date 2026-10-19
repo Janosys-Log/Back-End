@@ -21,7 +21,7 @@ public class CsvVeiculosController {
     @Autowired 
     CsvParaJson<ManifestoDTO> csvParaManifesto;
 
-    @PostMapping("/csv/veiculo")
+    @PostMapping("/csv")
     public ResultadoCsv<VeiculoDTO,ManifestoDTO> csvParaJsonVeiculo(@PathParam("csvVeiculo") MultipartFile csvVeiculo,@PathParam("csvManifesto")MultipartFile csvManifesto) {
         ResultadoLinhasDoCsv<VeiculoDTO> veiculos=     csvParaVeiculo.RetornarJson(csvVeiculo, VeiculoDTO.class,RabbitConfig.routing_key_veiculosJson);
         ResultadoLinhasDoCsv<ManifestoDTO>manifestos=csvParaManifesto.RetornarJson(csvManifesto, ManifestoDTO.class, RabbitConfig.routing_key_ManifestoJson);

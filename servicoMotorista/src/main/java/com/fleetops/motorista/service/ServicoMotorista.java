@@ -8,6 +8,8 @@ import com.fleetops.motorista.domain.Veiculo;
 import com.fleetops.motorista.ouvinte.dto.response.VeiculoDTO;
 import com.fleetops.motorista.repository.MotoristaRepository;
 
+
+
 @Service 
 public class ServicoMotorista {
     @Autowired 

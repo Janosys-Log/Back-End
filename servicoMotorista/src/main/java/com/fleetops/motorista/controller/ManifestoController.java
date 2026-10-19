@@ -1,8 +1,10 @@
 package com.fleetops.motorista.controller;
 
 import com.fleetops.motorista.domain.Manifesto;
+import com.fleetops.motorista.dto.ResponseDate;
 import com.fleetops.motorista.repository.ManifestoRepositorio;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -37,6 +39,14 @@ public class ManifestoController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/dataDoUltimoManifesto")
+    public ResponseEntity<ResponseDate> buscardataUltimoManifesto(){
+       LocalDate data= repositorio.findFirstByOrderByDataInsert().get().getDataInsert();
+       ResponseDate resposta= new ResponseDate(data);
+           return ResponseEntity.ok(resposta);
+    }
+    
     
 
 }

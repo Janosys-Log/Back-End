@@ -15,6 +15,7 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import lombok.AllArgsConstructor;
@@ -42,7 +43,12 @@ public class Manifesto {
     @Size(max = 100, message = "O destino deve ter no máximo 100 caracteres")
     @Column(name = "destino", length = 100)
     private String destino;
+    
 
+    @CreationTimestamp 
+    @Column(name = "data_cricao",nullable = false,updatable = false)
+    private LocalDate dataInsert;
+    
     @Column(name = "valor_recebido", precision = 12, scale = 2)
     private BigDecimal valorRecebido;
 
