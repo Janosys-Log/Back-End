@@ -8,6 +8,8 @@ import com.fleetops.motorista.domain.Veiculo;
 import com.fleetops.motorista.ouvinte.dto.response.VeiculoDTO;
 import com.fleetops.motorista.repository.MotoristaRepository;
 
+
+
 @Service 
 public class ServicoMotorista {
     @Autowired 
@@ -24,7 +26,7 @@ public class ServicoMotorista {
      }
     
      public void SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(VeiculoDTO csvVeiculo){
-          
+          try{
           Motorista motoristaBanco=new Motorista();
            Veiculo veiculo=new Veiculo();
                  veiculo.setAgregadoId(servicoAgregado.pegarPorCnpj(csvVeiculo.getCnpjagregado()).getIdAgregado());
@@ -49,7 +51,13 @@ public class ServicoMotorista {
           motoristaBanco.setNomeMotorista(csvVeiculo.getMotorista());
           motoristaBanco.setAgregadoId( servicoAgregado.pegarPorCnpj(csvVeiculo.getCnpjagregado()).getIdAgregado());
           motoristaRepo.save(motoristaBanco);
-    
+     }catch(Exception e){
+          System.out.println("Não foi possivel realizar o salvamento desse Motorista");
+        System.out.println("Informações desse Motorista:");
+        System.out.println("Nome:"+csvVeiculo.getMotorista());
+        System.out.println("Cpf:"+csvVeiculo.getCpfmotorista());
+        System.out.println("Contato:"+csvVeiculo.getContatomotorista());
+     }
 
      
      }

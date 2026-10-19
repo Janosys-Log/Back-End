@@ -1,10 +1,12 @@
 package com.fleetops.motorista.ouvinte.dto.response;
 
+import java.util.List;
+
 public class ErroLinhasDoCsv {
     private Long Linha;
-    private String mensagem;
+    private List<String> mensagem;
 
-    public ErroLinhasDoCsv(Long Linha, String mensagem) {
+    public ErroLinhasDoCsv(Long Linha, List<String>  mensagem) {
         this.Linha = Linha;
         this.mensagem = mensagem;
     }
@@ -17,11 +19,11 @@ public class ErroLinhasDoCsv {
         Linha = linha;
     }
 
-    public String getMensagem() {
+    public List<String>  getMensagem() {
         return mensagem;
     }
 
-    public void setMensagem(String mensagem) {
+    public void setMensagem(List<String>  mensagem) {
         this.mensagem = mensagem;
     }
 }

@@ -61,9 +61,5 @@ public class MotoristaController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public ResponseEntity<Motorista> criar(@RequestBody Motorista novoMotorista) {
-        Motorista salvo = motoristaRepository.save(novoMotorista);
-        return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
-    }
+ 
 }

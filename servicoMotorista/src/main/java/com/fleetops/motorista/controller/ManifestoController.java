@@ -1,15 +1,18 @@
-package com.fleetops.manifesto.controller;
+package com.fleetops.motorista.controller;
 
-import com.fleetops.manifesto.domain.Manifesto;
-import com.fleetops.manifesto.repository.ManifestoRepositorio;
+import com.fleetops.motorista.domain.Manifesto;
+import com.fleetops.motorista.dto.ResponseDate;
+import com.fleetops.motorista.repository.ManifestoRepositorio;
+
+import java.time.LocalDate;
 import java.util.List;
-import org.springframework.http.HttpStatus;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+
+
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,9 +40,13 @@ public class ManifestoController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public ResponseEntity<Manifesto> criar(@RequestBody Manifesto novoManifesto) {
-        Manifesto salvo = repositorio.save(novoManifesto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
+    @GetMapping("/dataDoUltimoManifesto")
+    public ResponseEntity<ResponseDate> buscardataUltimoManifesto(){
+       LocalDate data= repositorio.findFirstByOrderByDataInsert().get().getDataInsert();
+       ResponseDate resposta= new ResponseDate(data);
+           return ResponseEntity.ok(resposta);
     }
+    
+    
+
 }

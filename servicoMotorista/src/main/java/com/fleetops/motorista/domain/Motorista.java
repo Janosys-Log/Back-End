@@ -16,6 +16,9 @@ import jakarta.validation.constraints.Size;
 import jakarta.persistence.OneToOne;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -57,9 +60,8 @@ public class Motorista {
 
     @Column(name = "status_updated_at")
     private LocalDateTime statusUpdatedAt;
-
-    @Column(name = "ultimo_manifesto")
-    private LocalDate ultimoManifesto;
+    
+    
 
     @Column(name = "contador_rota_sp")
     @Builder.Default

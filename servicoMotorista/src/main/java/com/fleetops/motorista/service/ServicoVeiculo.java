@@ -23,6 +23,7 @@ public class ServicoVeiculo {
     }
 
     public void SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(VeiculoDTO veiculo){
+        try{
             Veiculo veiculoparasalvar=new Veiculo();
             if(existe(veiculo.getPlaca())){
              veiculoparasalvar=Repo.findByplacaVeiculo(veiculo.getPlaca());
@@ -38,6 +39,15 @@ public class ServicoVeiculo {
             veiculoparasalvar.setSubtipoVeiculo(veiculo.getSubtipoVeiculo());
             veiculoparasalvar.setPlacaVeiculo(veiculo.getPlaca());
             Repo.save(veiculoparasalvar);
+
+        }catch(Exception e){
+            System.out.println("Não foi possivel realizar o salvamento desse Veiculo");
+        System.out.println("Informações desse Veiculo:");
+        System.out.println("Placa:"+veiculo.getPlaca());
+        System.out.println("Tipo:"+veiculo.getTipoVeiculo());
+        System.out.println("Subtipo:"+veiculo.getSubtipoVeiculo());
+        System.out.println("Status:"+veiculo.getStatus());
+        }
     }
 
     public Veiculo acharPorPlaca(String placa){
