@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,6 +25,7 @@ import com.fleetops.motorista.service.StatusMotoristasService;
  */
 @RestController
 @RequestMapping("/api/status")
+@CrossOrigin(origins = "*")
 @Tag(name = "Status do Motorista", description = "Endpoints para registro e atualização do status do motorista")
 public class StatusMotoristasController {
     private final StatusMotoristasService motoristaService;

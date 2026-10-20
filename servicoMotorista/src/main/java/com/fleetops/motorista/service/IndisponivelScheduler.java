@@ -22,11 +22,11 @@ public class IndisponivelScheduler {
         this.motoristaRepository = motoristaRepository;
     }
 
-    @Scheduled(fixedRate = 3600000)
+    @Scheduled(fixedRate = 360000)
     @Transactional
     public void reativarIndisponiveis() {
         LocalDateTime limite = LocalDateTime.now().minusDays(diasIndisponivel);
-        List<Motorista> antigos = motoristaRepository.findIndisponiveisAntigos(StatusMotorista.Indisponivel, limite);
+        List<Motorista> antigos = motoristaRepository.findIndisponiveisAntigos(StatusMotorista.Indesejado, limite);
         for (Motorista m : antigos) {
             m.atualizaStatus(StatusMotorista.Disponivel);
             motoristaRepository.save(m);

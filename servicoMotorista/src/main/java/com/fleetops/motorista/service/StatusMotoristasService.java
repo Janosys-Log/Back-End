@@ -1,16 +1,15 @@
 package com.fleetops.motorista.service;
 
-import java.util.Optional;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-
 import com.fleetops.motorista.domain.Motorista;
 import com.fleetops.motorista.domain.StatusMotorista;
 import com.fleetops.motorista.dto.StatusDTO;
 import com.fleetops.motorista.exceptions.FluxoStatusNaoEsperadoException;
 import com.fleetops.motorista.exceptions.MotoristaNaoEncontradoException;
 import com.fleetops.motorista.repository.MotoristaRepository;
+import java.util.Optional;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 
 @Service
 public class StatusMotoristasService {
@@ -27,7 +26,8 @@ public class StatusMotoristasService {
 
         if (motorista.getStatus() == StatusMotorista.Disponivel
                 && (statusDTO.getStatus() != StatusMotorista.Em_Rota
-                        && statusDTO.getStatus() != StatusMotorista.Indisponivel))
+                        && statusDTO.getStatus() != StatusMotorista.Indisponivel
+                        && statusDTO.getStatus() != StatusMotorista.Indesejado))
             throw new FluxoStatusNaoEsperadoException(statusDTO.getStatus());
 
         motorista.atualizaStatus(statusDTO.getStatus());
