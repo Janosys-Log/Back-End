@@ -57,6 +57,7 @@ services:
            SPRING_RABBITMQ_PORT: 5672
            SPRING_RABBITMQ_USERNAME: rabbit
            SPRING_RABBITMQ_PASSWORD: rabbit
+           APP_SECURITY_JWT_SECRET: ${JWT_SECRET}
      ports:
       - "8080:8080"
 
@@ -82,6 +83,7 @@ services:
                   SPRING_RABBITMQ_PORT: 5672
                   SPRING_RABBITMQ_USERNAME: rabbit
                   SPRING_RABBITMQ_PASSWORD: rabbit
+                  APP_SECURITY_JWT_SECRET: ${JWT_SECRET}
         restart: on-failure 
  
 
@@ -106,6 +108,7 @@ services:
                   SPRING_RABBITMQ_PORT: 5672
                   SPRING_RABBITMQ_USERNAME: rabbit
                   SPRING_RABBITMQ_PASSWORD: rabbit
+                  APP_SECURITY_JWT_SECRET: ${JWT_SECRET}
        healthcheck:
           test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health | grep -q UP || exit 1"]
           interval: 5s
