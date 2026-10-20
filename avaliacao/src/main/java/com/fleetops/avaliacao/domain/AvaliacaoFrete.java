@@ -43,6 +43,13 @@ public class AvaliacaoFrete {
     private String feedback;
 
     /**
+     * Número do manifesto identificar a rota realizada
+     * e auxiliar a análise do gerente operacional (obrigatório)
+     */
+    @Column(name = "numero_manifesto", nullable = false)
+    private Integer numeroManifesto;
+
+    /**
      * ID do motorista ao qual a avaliação está vinculada.
      * Mantido como Long (sem @ManyToOne) para baixo acoplamento
      * e facilitar migração para microsserviço.
