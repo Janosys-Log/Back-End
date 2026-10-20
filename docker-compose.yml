@@ -6,7 +6,7 @@ services:
       MYSQL_ROOT_PASSWORD: root       # Senha padrão de desenvolvimento
     
     ports:
-      - "3306:3306"                    # Mapeia a porta do container para o seu Linux
+      - "3309:3306"                    # Porta 3309 do Linux -> porta 3306 do MySQL
     volumes:
       - mysql_data:/var/lib/mysql 
       - ./infra-database/init.sql:/docker-entrypoint-initdb.d/init.sql   
@@ -39,6 +39,7 @@ services:
       SPRING_RABBITMQ_USERNAME: rabbit
       SPRING_RABBITMQ_PASSWORD: rabbit
       APP_SECURITY_JWT_SECRET: ${JWT_SECRET}
+      SERVER_PORT: 8081
     restart: on-failure
 
   servico-csvjson:
