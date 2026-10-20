@@ -1,0 +1,60 @@
+package com.fleetops.servicoMotorista.domain;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "veiculo")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Veiculo {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_veiculo")
+    private Long idVeiculo;
+
+    @NotBlank(message = "A placa do veículo é obrigatória")
+    @Size(max = 7, message = "A placa deve ter no máximo 7 caracteres")
+    @Column(name = "placa_veiculo", length = 7, unique = true, nullable = false)
+    private String placaVeiculo;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_veiculo", length = 30)
+    private TipoVeiculo tipoVeiculo;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "subtipo_veiculo", length = 50)
+    private SubtipoVeiculo subtipoVeiculo;
+
+    @NotNull(message = "O agregado proprietário é obrigatório")
+    @Column(name = "agregado_id", nullable = false)
+    private Long agregadoId;
+
+    @PrePersist
+    @PreUpdate
+    private void preencherTipoAutnullomatico() {
+        if (this.subtipoVeiculo != null && this.tipoVeiculo == null) {
+            this.tipoVeiculo = this.subtipoVeiculo.getTipo();
+        }
+    }
+}

@@ -30,9 +30,6 @@ CREATE TABLE IF NOT EXISTS `agregado` (
   `nome_agregado` VARCHAR(150) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
-
-
 CREATE TABLE IF NOT EXISTS `manifesto` (
   `id_manifesto` INT PRIMARY KEY AUTO_INCREMENT,
   `data_manifesto` DATE,
