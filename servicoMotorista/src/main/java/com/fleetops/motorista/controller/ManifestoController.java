@@ -42,9 +42,9 @@ public class ManifestoController {
 
     @GetMapping("/dataDoUltimoManifesto")
     public ResponseEntity<ResponseDate> buscardataUltimoManifesto(){
-       LocalDate data= repositorio.findFirstByOrderByDataInsert().get().getDataInsert();
-       ResponseDate resposta= new ResponseDate(data);
-           return ResponseEntity.ok(resposta);
+       return repositorio.findFirstByOrderByDataInsertDesc().
+       map(map->ResponseEntity.ok(new ResponseDate(map.getDataInsert()))).
+       orElse(ResponseEntity.notFound().build());
     }
     
     
