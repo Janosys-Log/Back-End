@@ -42,6 +42,11 @@ public class AvaliacaoRequestDTO {
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer nota;
 
+    @NotNull(message = "O número do manifesto é obrigatório")
+    @Min(value = 1, message = "O número do manifesto deve ser maior que 0")
+    @Schema(description = "Número do manifesto para identifação das rotas", example = "2")
+    private Integer numeroManifesto;
+
     @NotBlank(message = "O feedback é obrigatório")
     @Schema(
             description = "Texto de feedback da avaliação",

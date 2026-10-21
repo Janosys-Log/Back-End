@@ -33,6 +33,9 @@ public class AvaliacaoResponseDTO {
     @Schema(description = "Nota registrada (1 a 5)", example = "4")
     private Integer nota;
 
+    @Schema(description = "Número do manifesto", example = "4")
+    private Integer numeroManifesto;
+
     @Schema(description = "Descrição da escala da nota", example = "Bom")
     private String descricaoNota;
 

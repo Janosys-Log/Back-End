@@ -28,6 +28,7 @@ public class AvaliacaoFreteService {
 
         AvaliacaoFrete avaliacao = AvaliacaoFrete.builder()
                 .nota(request.getNota())
+                .numeroManifesto(request.getNumeroManifesto())
                 .feedback(request.getFeedback().trim())
                 .motoristaId(request.getMotoristaId())
                 .build();
@@ -39,6 +40,7 @@ public class AvaliacaoFreteService {
                 .id(salva.getId())
                 .motoristaId(salva.getMotoristaId())
                 .nota(salva.getNota())
+                .numeroManifesto(salva.getNumeroManifesto())
                 .descricaoNota(escala.getDescricao())
                 .feedback(salva.getFeedback())
                 .dataRegistro(salva.getDataRegistro())
