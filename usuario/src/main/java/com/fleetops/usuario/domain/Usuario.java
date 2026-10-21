@@ -55,4 +55,16 @@ public class Usuario {
     @Builder.Default
     @Column(name = "ativo", nullable = false)
     private Boolean ativo = true;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "papel_usuario", length = 30)
+    private Papel papel;
+
+    @Size(max = 50, message = "O nome de login deve ter no máximo 50 caracteres")
+    @Column(name = "login_usuario", length = 50, unique = true)
+    private String loginUsuario;
+
+    @Builder.Default
+    @Column(name = "primario", nullable = false, columnDefinition = "bit default 0")
+    private Boolean primario = false;
 }

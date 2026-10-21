@@ -1,5 +1,6 @@
 package com.fleetops.usuario.seeder;
 
+import com.fleetops.usuario.domain.Papel;
 import com.fleetops.usuario.domain.PerfilAcesso;
 import com.fleetops.usuario.domain.Usuario;
 import com.fleetops.usuario.repository.UsuarioRepository;
@@ -17,6 +18,9 @@ public class UsuarioPrimarioSeeder implements CommandLineRunner {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Value("${app.security.admin.login:admin}")
+    private String adminLogin;
 
     @Value("${app.security.admin.nome:Administrador Primário}")
     private String adminNome;
@@ -38,8 +42,11 @@ public class UsuarioPrimarioSeeder implements CommandLineRunner {
             Usuario primario = Usuario.builder()
                     .nomeUsuario(adminNome)
                     .emailUsuario(adminEmail)
+                    .loginUsuario(adminLogin)
                     .senhaUsuario(passwordEncoder.encode(adminPassword))
                     .perfilAcesso(PerfilAcesso.GERENCIA)
+                    .papel(Papel.GERENTE_OPERACIONAL)
+                    .primario(true)
                     .ativo(true)
                     .build();
 
