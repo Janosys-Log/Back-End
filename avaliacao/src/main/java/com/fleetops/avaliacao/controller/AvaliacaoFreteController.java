@@ -40,10 +40,10 @@ public class AvaliacaoFreteController {
             summary = "Registrar avaliação de frete",
             description =
                     """
-            Recebe nota (1 a 5) e feedback obrigatórios, vinculando-os ao motorista informado.
-            Escala: 1=Péssimo, 2=Ruim, 3=Regular, 4=Bom, 5=Excelente.
-            A avaliação fica associada ao motorista e à data de registro para uso futuro no ranking.
-            """)
+                        Recebe nota (1 a 5), número do manifesto e feedback obrigatórios, vinculando-os ao motorista informado.
+                        Escala: 1=Péssimo, 2=Ruim, 3=Regular, 4=Bom, 5=Excelente.
+                        A avaliação fica associada ao motorista e à data de registro para uso futuro no ranking.
+                        """)
     @ApiResponses({
         @ApiResponse(
                 responseCode = "201",
