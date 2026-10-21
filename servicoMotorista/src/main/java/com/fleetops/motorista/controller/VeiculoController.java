@@ -1,57 +1,49 @@
 package com.fleetops.motorista.controller;
 
 import java.util.List;
-import org.springframework.http.HttpStatus;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fleetops.motorista.domain.SubtipoVeiculo;
 import com.fleetops.motorista.domain.TipoVeiculo;
-import com.fleetops.motorista.domain.Veiculo;
-import com.fleetops.motorista.repository.VeiculoRepository;
-import com.fleetops.motorista.domain.CategoriaVeiculo;
+import com.fleetops.motorista.dto.VeiculoDTO;
+import com.fleetops.motorista.service.ServicoVeiculo;
 
 @RestController
 @RequestMapping("/api/veiculos")
 @CrossOrigin(origins = "*")
 public class VeiculoController {
-
-    private final VeiculoRepository repositorio;
-
-    public VeiculoController(VeiculoRepository repositorio) {
-        this.repositorio = repositorio;
-    }
+    @Autowired 
+    private ServicoVeiculo servico;
 
     @GetMapping
-    public List<Veiculo> listar(
+    public List<VeiculoDTO> listar(
             @RequestParam(required = false) TipoVeiculo tipo,
             @RequestParam(required = false) SubtipoVeiculo subtipo) {
-        if (tipo != null) {
-            return repositorio.findByTipoVeiculo(tipo);
-        }
-        if (subtipo != null) {
-            return repositorio.findBySubtipoVeiculo(subtipo);
-        }
-        return repositorio.findAll();
+        return servico.listar(tipo, subtipo).stream()
+                .map(VeiculoDTO::fromEntity)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Veiculo> buscarPorId(@PathVariable Long id) {
-        return repositorio
-                .findById(id)
+    public ResponseEntity<VeiculoDTO> buscarPorId(@PathVariable Long id) {
+        return servico.buscarPorId(id)
+                .map(VeiculoDTO::fromEntity)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/tipo/{tipo}")
-    public List<Veiculo> listarPorTipo(@PathVariable TipoVeiculo tipo) {
-        return repositorio.findByTipoVeiculo(tipo);
+    public List<VeiculoDTO> listarPorTipo(@PathVariable TipoVeiculo tipo) {
+        return servico.listarPorTipo(tipo).stream()
+                .map(VeiculoDTO::fromEntity)
+                .toList();
     }
 }
