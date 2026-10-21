@@ -1,62 +1,49 @@
 package com.fleetops.motorista.controller;
-import java.util.Collections;
+
 import java.util.List;
-import org.springframework.http.HttpStatus;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fleetops.motorista.domain.Motorista;
 import com.fleetops.motorista.domain.StatusMotorista;
-import com.fleetops.motorista.repository.MotoristaRepository;
+import com.fleetops.motorista.dto.MotoristaDTO;
+import com.fleetops.motorista.service.ServicoMotorista;
 
 @RestController
 @RequestMapping("/api/motoristas")
 @CrossOrigin(origins = "*")
 public class MotoristaController {
-
-    private final MotoristaRepository motoristaRepository;
-
-    public MotoristaController(MotoristaRepository motoristaRepository) {
-        this.motoristaRepository = motoristaRepository;
-    }
+    @Autowired 
+    private ServicoMotorista servico;
 
     @GetMapping
-    public ResponseEntity<?> listar(
+    public ResponseEntity<List<MotoristaDTO>> listar(
             @RequestParam(required = false) StatusMotorista status,
             @RequestParam(required = false) List<Long> veiculoIds) {
-        List<Motorista> resultado;
-        if (status != null && veiculoIds != null && !veiculoIds.isEmpty()) {
-            resultado = motoristaRepository.findByStatusAndVeiculoIdVeiculoIn(status, veiculoIds);
-        } else if (status != null) {
-            resultado = motoristaRepository.findByStatus(status);
-        } else if (veiculoIds != null && !veiculoIds.isEmpty()) {
-            resultado = motoristaRepository.findByVeiculoIdVeiculoIn(veiculoIds);
-        } else {
-            resultado = motoristaRepository.findAll();
-        }
-        
+        List<MotoristaDTO> resultado = servico.listar(status, veiculoIds).stream()
+                .map(MotoristaDTO::fromEntity)
+                .toList();
         return ResponseEntity.ok(resultado);
     }
 
     @GetMapping("/disponiveis")
-    public List<Motorista> listarDisponiveis() {
-        return motoristaRepository.findByStatus(StatusMotorista.Disponivel);
+    public List<MotoristaDTO> listarDisponiveis() {
+        return servico.listarDisponiveis().stream()
+                .map(MotoristaDTO::fromEntity)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Motorista> buscarPorId(@PathVariable Long id) {
-        return motoristaRepository
-                .findById(id)
+    public ResponseEntity<MotoristaDTO> buscarPorId(@PathVariable Long id) {
+        return servico.buscarPorId(id)
+                .map(MotoristaDTO::fromEntity)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-
- 
 }

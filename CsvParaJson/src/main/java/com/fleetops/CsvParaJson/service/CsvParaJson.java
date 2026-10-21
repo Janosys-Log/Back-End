@@ -2,6 +2,7 @@ package com.fleetops.CsvParaJson.service;
 
 import com.fleetops.CsvParaJson.config.RabbitConfig;
 import com.fleetops.CsvParaJson.dto.response.ResultadoLinhasDoCsv;
+import com.fleetops.CsvParaJson.exceptions.tipos.ArquivoInexistente;
 import com.fleetops.CsvParaJson.exceptions.tipos.ErroDeServicodeConsumo;
 import com.fleetops.CsvParaJson.exceptions.tipos.ErrodeExtensao;
 import com.fleetops.CsvParaJson.exceptions.tipos.NaoFoiPossivelAcharEncoding;
@@ -41,7 +42,9 @@ public class CsvParaJson<T> {
     private final RabbitTemplate rabbitmq;
 
     public ResultadoLinhasDoCsv<T> RetornarJson(MultipartFile arquivo, Class<T> tipo, String filaParaEnviar) {
-
+        if(arquivo== null || tipo==null || filaParaEnviar==null){
+            throw new ArquivoInexistente("Verifique sua requisição", "A requisição possui um arquivo faltando");
+        }
         List<T> objetos = this.LerCsv(arquivo, tipo);
 
         ResultadoLinhasDoCsv<T> resultado = validador.Validar(objetos);

@@ -1,6 +1,7 @@
 package com.fleetops.CsvParaJson.exceptions;
 
 import com.fleetops.CsvParaJson.dto.response.ErroDTO;
+import com.fleetops.CsvParaJson.exceptions.tipos.ArquivoInexistente;
 import com.fleetops.CsvParaJson.exceptions.tipos.ErroDeEncoding;
 import com.fleetops.CsvParaJson.exceptions.tipos.ErroDeServicodeConsumo;
 import com.fleetops.CsvParaJson.exceptions.tipos.ErrodeExtensao;
@@ -39,5 +40,11 @@ public class ManipuladorExcessaoCsv {
     public ErroDTO manipularErroDeConsumo(ErroDeServicodeConsumo erro){
         ErroDTO resposta= new ErroDTO(erro.getMessage(), erro.getMensagemErro());
         return  resposta;
+    }
+
+    @ExceptionHandler (ArquivoInexistente.class)
+    public ErroDTO manipiladorArquivoInexistente(ArquivoInexistente erro){
+        ErroDTO resposta= new ErroDTO(erro.getMessage(), erro.getMensagem());
+        return resposta;
     }
 }
