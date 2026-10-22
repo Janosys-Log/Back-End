@@ -4,6 +4,7 @@ import com.fleetops.avaliacao.dto.AvaliacaoRequestDTO;
 import com.fleetops.avaliacao.dto.AvaliacaoResponseDTO;
 import com.fleetops.avaliacao.service.AvaliacaoFreteService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -39,11 +40,33 @@ public class AvaliacaoFreteController {
     private final AvaliacaoFreteService service;
 
     @GetMapping
+    @Operation(
+            summary = "Listar avaliações de frete",
+            description = "Retorna a lista de todas as avaliações de frete cadastradas.")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "Avaliações retornadas com sucesso",
+                content =
+                        @Content(array = @ArraySchema(schema = @Schema(implementation = AvaliacaoResponseDTO.class)))),
+        @ApiResponse(responseCode = "500", description = "Erro interno ao consultar o banco de dados")
+    })
     public ResponseEntity<List<AvaliacaoResponseDTO>> listarTodos() {
         return new ResponseEntity<List<AvaliacaoResponseDTO>>(this.service.listarAvaliacoes(), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
+    @Operation(
+            summary = "Buscar avaliação de frete por ID",
+            description = "Retorna a avaliação de frete correspondente ao ID informado.")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "Avaliação retornada com sucesso",
+                content = @Content(schema = @Schema(implementation = AvaliacaoResponseDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Avaliação não encontrada para o ID informado"),
+        @ApiResponse(responseCode = "500", description = "Erro interno ao consultar o banco de dados")
+    })
     public ResponseEntity<AvaliacaoResponseDTO> buscarPorId(@PathVariable Long id) {
         return new ResponseEntity<AvaliacaoResponseDTO>(this.service.buscarAvaliacao(id), HttpStatus.OK);
     }
