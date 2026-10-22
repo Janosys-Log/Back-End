@@ -2,6 +2,7 @@ package com.fleetops.avaliacao.repository;
 
 import com.fleetops.avaliacao.domain.AvaliacaoFrete;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface AvaliacaoFreteRepository extends JpaRepository<AvaliacaoFrete, Long> {
+    Optional<AvaliacaoFrete> findById(Long id);
 
     List<AvaliacaoFrete> findByMotoristaIdOrderByDataRegistroDesc(Long motoristaId);
 }

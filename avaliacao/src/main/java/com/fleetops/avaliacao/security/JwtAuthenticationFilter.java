@@ -1,6 +1,5 @@
 package com.fleetops.avaliacao.security;
 
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -16,9 +15,9 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-@Component 
+@Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-     private final JwtService jwtService;
+    private final JwtService jwtService;
 
     public JwtAuthenticationFilter(JwtService jwtService) {
         this.jwtService = jwtService;
@@ -39,7 +38,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String email = claims.getSubject();
             String perfil = claims.get("perfil", String.class);
 
-            if (email != null && perfil != null
+            if (email != null
+                    && perfil != null
                     && SecurityContextHolder.getContext().getAuthentication() == null) {
                 var auth = new UsernamePasswordAuthenticationToken(
                         email, null, List.of(new SimpleGrantedAuthority("ROLE_" + perfil)));

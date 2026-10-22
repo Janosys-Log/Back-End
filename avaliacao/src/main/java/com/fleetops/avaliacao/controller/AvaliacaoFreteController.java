@@ -10,10 +10,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,15 +38,25 @@ public class AvaliacaoFreteController {
 
     private final AvaliacaoFreteService service;
 
+    @GetMapping
+    public ResponseEntity<List<AvaliacaoResponseDTO>> listarTodos() {
+        return new ResponseEntity<List<AvaliacaoResponseDTO>>(this.service.listarAvaliacoes(), HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AvaliacaoResponseDTO> buscarPorId(@PathVariable Long id) {
+        return new ResponseEntity<AvaliacaoResponseDTO>(this.service.buscarAvaliacao(id), HttpStatus.OK);
+    }
+
     @PostMapping
     @Operation(
             summary = "Registrar avaliação de frete",
             description =
                     """
-                        Recebe nota (1 a 5), número do manifesto e feedback obrigatórios, vinculando-os ao motorista informado.
-                        Escala: 1=Péssimo, 2=Ruim, 3=Regular, 4=Bom, 5=Excelente.
-                        A avaliação fica associada ao motorista e à data de registro para uso futuro no ranking.
-                        """)
+            Recebe nota (1 a 5), número do manifesto e feedback obrigatórios, vinculando-os ao motorista informado.
+            Escala: 1=Péssimo, 2=Ruim, 3=Regular, 4=Bom, 5=Excelente.
+            A avaliação fica associada ao motorista e à data de registro para uso futuro no ranking.
+            """)
     @ApiResponses({
         @ApiResponse(
                 responseCode = "201",

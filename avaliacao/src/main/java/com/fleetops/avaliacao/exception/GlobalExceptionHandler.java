@@ -1,5 +1,6 @@
 package com.fleetops.avaliacao.exception;
 
+import com.fleetops.avaliacao.dto.ResponseErrorDTO;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,5 +37,11 @@ public class GlobalExceptionHandler {
         body.put("status", HttpStatus.BAD_REQUEST.value());
         body.put("error", ex.getMessage());
         return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(AvaliacaoNaoEncontrada.class)
+    public ResponseEntity<ResponseErrorDTO> handleAvaliacaoNaoEncontrada(AvaliacaoNaoEncontrada ex) {
+        return new ResponseEntity<ResponseErrorDTO>(
+                new ResponseErrorDTO(ex.getMessage(), ex.customMessagem), HttpStatus.NOT_FOUND);
     }
 }
