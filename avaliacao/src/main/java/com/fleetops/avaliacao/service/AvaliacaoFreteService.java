@@ -4,6 +4,8 @@ import com.fleetops.avaliacao.domain.AvaliacaoFrete;
 import com.fleetops.avaliacao.domain.EscalaNota;
 import com.fleetops.avaliacao.dto.AvaliacaoRequestDTO;
 import com.fleetops.avaliacao.dto.AvaliacaoResponseDTO;
+import com.fleetops.avaliacao.dto.AvaliacaoResponseDTOMapper;
+import com.fleetops.avaliacao.exception.AvaliacaoNaoEncontrada;
 import com.fleetops.avaliacao.repository.AvaliacaoFreteRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,21 @@ import org.springframework.web.server.ResponseStatusException;
 public class AvaliacaoFreteService {
 
     private final AvaliacaoFreteRepository repository;
+
+    public List<AvaliacaoResponseDTO> listarAvaliacoes() {
+        List<AvaliacaoFrete> avaliacoes = this.repository.findAll();
+        return avaliacoes.stream()
+                .map(a -> AvaliacaoResponseDTOMapper.toDTO(a, "", ""))
+                .toList();
+    }
+
+    public AvaliacaoResponseDTO buscarAvaliacao(Long id) {
+        AvaliacaoFrete avaliacao = this.repository
+                .findById(id)
+                .orElseThrow(() -> new AvaliacaoNaoEncontrada(id, "Não foi possível retornar avaliação"));
+
+        return AvaliacaoResponseDTOMapper.toDTO(avaliacao, "", "");
+    }
 
     @Transactional
     public AvaliacaoResponseDTO registrar(AvaliacaoRequestDTO request) {
