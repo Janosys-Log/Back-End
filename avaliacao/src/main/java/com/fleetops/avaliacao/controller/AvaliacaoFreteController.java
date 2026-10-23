@@ -4,6 +4,7 @@ import com.fleetops.avaliacao.dto.AvaliacaoRequestDTO;
 import com.fleetops.avaliacao.dto.AvaliacaoResponseDTO;
 import com.fleetops.avaliacao.service.AvaliacaoFreteService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -38,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AvaliacaoFreteController {
 
     private final AvaliacaoFreteService service;
+
 
     @PostMapping
     @Operation(

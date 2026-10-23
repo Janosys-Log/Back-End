@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -38,20 +40,17 @@ public class StatusMotoristasController {
             summary = "Atualizar status do motorista",
             description =
                     """
-      Recebe status (Disponivel, Em_Rota, Indisponivel, Indesejado) e mostoristaId obrigatórios.
-      Fluxo:
-        Motorista Com Status Disponível → Operador Realiza Ligação →  Motorista aceita o Frete → Status Muda para “Em Rota”
-        Motorista Com Status Disponível → Operador Realiza Ligação → Motorista Recusa → Status muda para Indisponível (Status dura 15 dias ou até o operador alterar)
-      """)
+            Recebe status (Disponivel, Em_Rota, Indisponivel, Indesejado) e mostoristaId obrigatórios.
+            Fluxo:
+              Motorista Com Status Disponível → Operador Realiza Ligação →  Motorista aceita o Frete → Status Muda para “Em Rota”
+              Motorista Com Status Disponível → Operador Realiza Ligação → Motorista Recusa → Status muda para Indisponível (Status dura 15 dias ou até o operador alterar)
+            """)
     @ApiResponses({
-        @ApiResponse(
-                responseCode = "204",
-                description = "Status atualizado com sucesso",
-                content = @Content(schema = @Schema(implementation = ResponseEntity.class))),
-        @ApiResponse(responseCode = "400", description = "Fluxo de Status incorreto, Erro interno do servidor"),
-        @ApiResponse(responseCode = "404", description = "Motorista não encontrado")
+            @ApiResponse(responseCode = "204", description = "Status atualizado com sucesso", content = @Content(schema = @Schema(implementation = ResponseEntity.class))),
+            @ApiResponse(responseCode = "400", description = "Fluxo de Status incorreto, Erro interno do servidor"),
+            @ApiResponse(responseCode = "404", description = "Motorista não encontrado")
     })
-    public ResponseEntity<String> atualizaStatusMotorista(@RequestBody StatusDTO statusDTO) {
+    public ResponseEntity<String> atualizaStatusMotorista(@Valid @RequestBody StatusDTO statusDTO) {
         return motoristaService.atualizaStatusMotorista(statusDTO);
     }
 }
