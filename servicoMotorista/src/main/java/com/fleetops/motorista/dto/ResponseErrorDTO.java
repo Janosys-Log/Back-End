@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ResponseErrorDTO     {
+public class ResponseErrorDTO {
     private String mensagem;
 }

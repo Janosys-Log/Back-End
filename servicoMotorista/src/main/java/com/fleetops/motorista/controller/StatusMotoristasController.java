@@ -1,5 +1,7 @@
 package com.fleetops.motorista.controller;
 
+import com.fleetops.motorista.dto.StatusDTO;
+import com.fleetops.motorista.service.StatusMotoristasService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,9 +14,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.fleetops.motorista.dto.StatusDTO;
-import com.fleetops.motorista.service.StatusMotoristasService;
 
 /**
  * Controller REST para registro dos statos do motorista.

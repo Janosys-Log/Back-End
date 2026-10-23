@@ -1,17 +1,15 @@
 package com.fleetops.motorista.service;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.fleetops.motorista.domain.Agregado;
 import com.fleetops.motorista.domain.SubtipoVeiculo;
 import com.fleetops.motorista.domain.TipoVeiculo;
 import com.fleetops.motorista.domain.Veiculo;
 import com.fleetops.motorista.ouvinte.dto.response.VeiculoDTO;
 import com.fleetops.motorista.repository.VeiculoRepository;
+import java.util.List;
+import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class ServicoVeiculo {
@@ -39,8 +37,6 @@ public class ServicoVeiculo {
     public List<Veiculo> listarPorTipo(TipoVeiculo tipo) {
         return Repo.findByTipoVeiculo(tipo);
     }
-
-  
 
     public boolean existe(String Placa) {
         return Repo.existsByplacaVeiculo(Placa);

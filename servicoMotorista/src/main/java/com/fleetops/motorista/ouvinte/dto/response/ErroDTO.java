@@ -1,6 +1,5 @@
 package com.fleetops.motorista.ouvinte.dto.response;
 
-
 public class ErroDTO {
     private String titulo;
     private String mensagem;
