@@ -1,25 +1,18 @@
 package com.fleetops.motorista.security;
 
-import java.nio.charset.StandardCharsets;
-
-import javax.crypto.SecretKey;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 import javax.crypto.SecretKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-@Service 
+@Service
 public class JwtService {
-    
-
 
     private static final Logger log = LoggerFactory.getLogger(JwtService.class);
 

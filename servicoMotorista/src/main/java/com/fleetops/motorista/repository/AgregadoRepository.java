@@ -1,8 +1,7 @@
 package com.fleetops.motorista.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import com.fleetops.motorista.domain.Agregado;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AgregadoRepository extends JpaRepository<Agregado, Long> {
     Agregado findBynomeAgregado(String nome);

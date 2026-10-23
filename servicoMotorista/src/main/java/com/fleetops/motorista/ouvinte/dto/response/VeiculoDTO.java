@@ -1,51 +1,46 @@
 package com.fleetops.motorista.ouvinte.dto.response;
+
 import com.fleetops.motorista.domain.SubtipoVeiculo;
 import com.fleetops.motorista.domain.TipoVeiculo;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
 public class VeiculoDTO {
-   
+
     @NotBlank(message = "O Veiculo Precisa ter uma Placa")
     @NotNull(message = "Placa Precisa ter Valor")
     private String placa;
 
-    
     @NotBlank(message = "O Veiculo Precisa ter um  Agragado")
     @NotNull(message = "Agragado Precisa ter valor")
     @Pattern(regexp = "^[^0-9]*$", message = "O campo Agragado não pode conter números")
     private String agregado;
 
-    
     @NotBlank(message = "O Veiculo Precisa ter um Status")
     @NotNull(message = "Status precisa ter valor")
     @Pattern(regexp = "Ativo|Inativo", message = "Status deve ser Ativo ou Inativo")
     private String status;
 
-  
     @NotBlank(message = "O Veiculo Precisa ter um Motorista")
     @NotNull(message = "O Motorista precisa ter valor")
     @Pattern(regexp = "^[^0-9]*$", message = "O campo Motorista não pode conter números")
     private String motorista;
 
-   
     @NotBlank(message = "O Veiculo Precisa ter um Tipo")
     @NotNull(message = "TipoVeiculo Precisa ter valor")
     @Pattern(regexp = "^[^0-9]*$", message = "O campo TipoVeiculo não pode conter números")
     private TipoVeiculo tipoVeiculo;
 
     private SubtipoVeiculo subtipoVeiculo;
-    
+
     private String cpfmotorista;
 
-     private String cnpjagregado;
+    private String cnpjagregado;
 
-     private String contatomotorista;
+    private String contatomotorista;
 
-     private String contatoagregado;
-    
+    private String contatoagregado;
 
     public VeiculoDTO(String placa, String agregado, String Status, String Motorista, TipoVeiculo TipoVeiculo) {
         this.agregado = agregado;
@@ -97,14 +92,13 @@ public class VeiculoDTO {
         tipoVeiculo = TipoVeiculo;
     }
 
+    public SubtipoVeiculo getSubtipoVeiculo() {
+        return subtipoVeiculo;
+    }
 
-   public SubtipoVeiculo getSubtipoVeiculo() {
-       return subtipoVeiculo;
-   }
-   public void setSubtipoVeiculo(SubtipoVeiculo subtipoVeiculo) {
-       this.subtipoVeiculo = subtipoVeiculo;
-   }
-    
+    public void setSubtipoVeiculo(SubtipoVeiculo subtipoVeiculo) {
+        this.subtipoVeiculo = subtipoVeiculo;
+    }
 
     public String getCnpjagregado() {
         return cnpjagregado;
@@ -129,6 +123,7 @@ public class VeiculoDTO {
     public void setContatomotorista(String contatomotorista) {
         this.contatomotorista = contatomotorista;
     }
+
     public String getCpfmotorista() {
         return cpfmotorista;
     }
@@ -136,5 +131,4 @@ public class VeiculoDTO {
     public void setCpfmotorista(String cpfmotorista) {
         this.cpfmotorista = cpfmotorista;
     }
-    
 }

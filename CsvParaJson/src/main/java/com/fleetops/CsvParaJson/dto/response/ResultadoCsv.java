@@ -1,12 +1,12 @@
 package com.fleetops.CsvParaJson.dto.response;
 
-public class ResultadoCsv<T,K> {
+public class ResultadoCsv<T, K> {
     private ResultadoLinhasDoCsv<T> resultadoLinhasDoCsv;
     private ResultadoLinhasDoCsv<K> resultadoLinhasDoCsv2;
 
-    public  ResultadoCsv(ResultadoLinhasDoCsv<T> resultado1, ResultadoLinhasDoCsv<K> resultado2){
-       this.resultadoLinhasDoCsv=resultado1;
-       this.resultadoLinhasDoCsv2=resultado2;
+    public ResultadoCsv(ResultadoLinhasDoCsv<T> resultado1, ResultadoLinhasDoCsv<K> resultado2) {
+        this.resultadoLinhasDoCsv = resultado1;
+        this.resultadoLinhasDoCsv2 = resultado2;
     }
 
     public ResultadoLinhasDoCsv<T> getResultadoLinhasDoCsv() {

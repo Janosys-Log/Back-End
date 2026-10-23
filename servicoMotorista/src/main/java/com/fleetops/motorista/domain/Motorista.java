@@ -1,6 +1,5 @@
 package com.fleetops.motorista.domain;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -10,17 +9,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import jakarta.persistence.OneToOne;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-
-import org.hibernate.annotations.CreationTimestamp;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -63,8 +57,6 @@ public class Motorista {
 
     @Column(name = "status_updated_at")
     private LocalDateTime statusUpdatedAt;
-    
-    
 
     @Column(name = "contador_rota_sp")
     @Builder.Default
@@ -74,11 +66,10 @@ public class Motorista {
     @Builder.Default
     private Float notaMedia = 0.0f;
 
-   
-    @OneToOne(fetch = FetchType.EAGER,orphanRemoval = true)
+    @OneToOne(fetch = FetchType.EAGER, orphanRemoval = true)
     @JoinColumn(name = "veiculo_id", unique = true)
     private Veiculo veiculo;
-    
+
     /**
      * ID do agregado ao qual o motorista está vinculado.
      * Mantido como Long (sem @OneToOne) para baixo acoplamento

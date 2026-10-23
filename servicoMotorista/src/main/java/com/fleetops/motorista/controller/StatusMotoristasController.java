@@ -36,7 +36,10 @@ public class StatusMotoristasController {
     }
 
     @PutMapping("/updateStatus")
-    @Operation(summary = "Atualizar status do motorista", description = """
+    @Operation(
+            summary = "Atualizar status do motorista",
+            description =
+                    """
             Recebe status (Disponivel, Em_Rota, Indisponivel, Indesejado) e mostoristaId obrigatórios.
             Fluxo:
               Motorista Com Status Disponível → Operador Realiza Ligação →  Motorista aceita o Frete → Status Muda para “Em Rota”

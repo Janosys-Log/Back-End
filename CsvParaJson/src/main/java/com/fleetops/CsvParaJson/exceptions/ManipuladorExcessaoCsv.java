@@ -37,14 +37,14 @@ public class ManipuladorExcessaoCsv {
     }
 
     @ExceptionHandler(ErroDeServicodeConsumo.class)
-    public ErroDTO manipularErroDeConsumo(ErroDeServicodeConsumo erro){
-        ErroDTO resposta= new ErroDTO(erro.getMessage(), erro.getMensagemErro());
-        return  resposta;
+    public ErroDTO manipularErroDeConsumo(ErroDeServicodeConsumo erro) {
+        ErroDTO resposta = new ErroDTO(erro.getMessage(), erro.getMensagemErro());
+        return resposta;
     }
 
-    @ExceptionHandler (ArquivoInexistente.class)
-    public ErroDTO manipiladorArquivoInexistente(ArquivoInexistente erro){
-        ErroDTO resposta= new ErroDTO(erro.getMessage(), erro.getMensagem());
+    @ExceptionHandler(ArquivoInexistente.class)
+    public ErroDTO manipiladorArquivoInexistente(ArquivoInexistente erro) {
+        ErroDTO resposta = new ErroDTO(erro.getMessage(), erro.getMensagem());
         return resposta;
     }
 }

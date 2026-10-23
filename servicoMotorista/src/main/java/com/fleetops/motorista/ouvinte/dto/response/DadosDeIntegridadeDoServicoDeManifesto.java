@@ -5,10 +5,10 @@ public class DadosDeIntegridadeDoServicoDeManifesto<T> {
     private T cnpjAgregado;
     private T placaVeiculo;
 
-    public DadosDeIntegridadeDoServicoDeManifesto(T cpf,T cnpj,T placa){
-     this.cnpjAgregado=cnpj;
-     this.cpfMotorista=cpf;
-     this.placaVeiculo=placa;
+    public DadosDeIntegridadeDoServicoDeManifesto(T cpf, T cnpj, T placa) {
+        this.cnpjAgregado = cnpj;
+        this.cpfMotorista = cpf;
+        this.placaVeiculo = placa;
     }
 
     public T getCnpjAgregado() {
@@ -19,7 +19,6 @@ public class DadosDeIntegridadeDoServicoDeManifesto<T> {
         this.cnpjAgregado = cnpjAgregado;
     }
 
-
     public T getCpfMotorista() {
         return cpfMotorista;
     }
@@ -27,11 +26,12 @@ public class DadosDeIntegridadeDoServicoDeManifesto<T> {
     public void setCpfMotorista(T cpfMotorista) {
         this.cpfMotorista = cpfMotorista;
     }
+
     public T getPlacaVeiculo() {
         return placaVeiculo;
     }
+
     public void setPlacaVeiculo(T placaVeiculo) {
         this.placaVeiculo = placaVeiculo;
     }
-    
 }

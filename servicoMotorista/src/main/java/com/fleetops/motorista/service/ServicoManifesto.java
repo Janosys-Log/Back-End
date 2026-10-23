@@ -1,20 +1,17 @@
 package com.fleetops.motorista.service;
 
+import com.fleetops.motorista.domain.Manifesto;
+import com.fleetops.motorista.dto.ResponseDate;
+import com.fleetops.motorista.ouvinte.dto.response.ManifestoDTO;
+import com.fleetops.motorista.repository.ManifestoRepositorio;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
 import java.util.List;
 import java.util.Optional;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.fleetops.motorista.domain.Manifesto;
-import com.fleetops.motorista.dto.ResponseDate;
-import com.fleetops.motorista.ouvinte.dto.response.ManifestoDTO;
-import com.fleetops.motorista.repository.ManifestoRepositorio;
-
-import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Service
@@ -41,7 +38,8 @@ public class ServicoManifesto {
     }
 
     public Optional<ResponseDate> buscarDataUltimoManifesto() {
-        return manifestoRepo.findFirstByOrderByDataInsertDesc()
+        return manifestoRepo
+                .findFirstByOrderByDataInsertDesc()
                 .map(manifesto -> new ResponseDate(manifesto.getDataInsert()));
     }
 
@@ -51,9 +49,7 @@ public class ServicoManifesto {
             return;
         }
 
-        DateTimeFormatter FMT = DateTimeFormatter
-                .ofPattern("dd/MM/uuuu")
-                .withResolverStyle(ResolverStyle.STRICT);
+        DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/uuuu").withResolverStyle(ResolverStyle.STRICT);
 
         manifestoParaSalvar.setAgregado(servAgregado.pegarPorCnpj(manifesto.getCnpjagregado()));
         manifestoParaSalvar.setDataManifesto(LocalDate.parse(manifesto.getData(), FMT));

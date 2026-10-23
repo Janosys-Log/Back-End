@@ -25,6 +25,7 @@ public enum TipoVeiculos {
     public CategoriaVeiculo getCategoria() {
         return categoria;
     }
+
     public static TipoVeiculos fromString(String value) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Tipo de veículo não informado");

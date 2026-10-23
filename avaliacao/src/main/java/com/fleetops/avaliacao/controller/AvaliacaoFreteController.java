@@ -22,10 +22,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Controller REST para registro de avaliações de frete.
+ * Controller REST para avaliações de frete.
  * Rota criada conforme SCRUM-28 e documentada com SpringDoc (SCRUM-48).
  *
  * Endpoint isolado no contexto /api/avaliacoes para facilitar
