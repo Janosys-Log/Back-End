@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AvaliacaoFreteService {
 
     private final AvaliacaoFreteRepository repository;
+    private final ManifestoClient manifestoClient;
 
     public List<AvaliacaoResponseDTO> listarAvaliacoes() {
         List<AvaliacaoFrete> avaliacoes = this.repository.findAll();
@@ -38,30 +39,26 @@ public class AvaliacaoFreteService {
         return AvaliacaoResponseDTOMapper.toDTO(avaliacao, "", "");
     }
 
-    @Transactional
-    public AvaliacaoResponseDTO registrar(AvaliacaoRequestDTO request) {
-        // Validação adicional da escala (já coberta pelo @Min/@Max, mas reforça regra
-        // de negócio)
-        EscalaNota escala = EscalaNota.fromValor(request.getNota());
+    public AvaliacaoFrete verificacaAvaliacao(AvaliacaoRequestDTO request) {
+        Long manifestoId = request.getNumeroManifesto().longValue();
 
-        AvaliacaoFrete avaliacao = AvaliacaoFrete.builder()
+        if (!manifestoClient.existe(manifestoId)) {
+            throw new IllegalArgumentException("Manifesto não encontrado");
+        }
+
+        return AvaliacaoFrete.builder()
                 .nota(request.getNota())
                 .numeroManifesto(request.getNumeroManifesto())
                 .feedback(request.getFeedback().trim())
                 .motoristaId(request.getMotoristaId())
                 .build();
+    }
 
+    @Transactional
+    public AvaliacaoResponseDTO registrar(AvaliacaoFrete avaliacao) {
+        EscalaNota escala = EscalaNota.fromValor(avaliacao.getNota());
         AvaliacaoFrete salva = repository.save(avaliacao);
 
-        return AvaliacaoResponseDTO.builder()
-                .mensagem("Avaliação registrada com sucesso")
-                .id(salva.getId())
-                .motoristaId(salva.getMotoristaId())
-                .nota(salva.getNota())
-                .numeroManifesto(salva.getNumeroManifesto())
-                .descricaoNota(escala.getDescricao())
-                .feedback(salva.getFeedback())
-                .dataRegistro(salva.getDataRegistro())
-                .build();
+        return AvaliacaoResponseDTOMapper.toDTO(salva, "Avaliação registrada com sucesso", escala.getDescricao());
     }
 }
