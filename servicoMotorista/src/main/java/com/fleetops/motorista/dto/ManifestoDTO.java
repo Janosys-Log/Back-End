@@ -1,40 +1,24 @@
 package com.fleetops.motorista.dto;
 
+import com.fleetops.motorista.domain.Agregado;
+import com.fleetops.motorista.domain.Manifesto;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import com.fleetops.motorista.domain.Agregado;
-import com.fleetops.motorista.domain.Manifesto;
-
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-
 public record ManifestoDTO(
-
         Long idManifesto,
-
         LocalDate dataManifesto,
-
-        @Size(max = 100, message = "O destino deve ter no máximo 100 caracteres")
-        String destino,
-
+        @Size(max = 100, message = "O destino deve ter no máximo 100 caracteres") String destino,
         LocalDate dataInsert,
-
         BigDecimal valorRecebido,
-
         BigDecimal freteEmpresa,
-
         BigDecimal freteAgregado,
-
         String observacoes,
-
         VeiculoDTO veiculo,
-
         Agregado agregado,
-
-        @NotNull(message = "O motorista condutor é obrigatório")
-        MotoristaDTO motorista
-) {
+        @NotNull(message = "O motorista condutor é obrigatório") MotoristaDTO motorista) {
 
     public static ManifestoDTO fromEntity(Manifesto manifesto) {
         return new ManifestoDTO(
@@ -46,14 +30,9 @@ public record ManifestoDTO(
                 manifesto.getFreteEmpresa(),
                 manifesto.getFreteAgregado(),
                 manifesto.getObservacoes(),
-                manifesto.getVeiculo() != null
-                        ? VeiculoDTO.fromEntity(manifesto.getVeiculo())
-                        : null,
+                manifesto.getVeiculo() != null ? VeiculoDTO.fromEntity(manifesto.getVeiculo()) : null,
                 manifesto.getAgregado(),
-                manifesto.getMotorista() != null
-                        ? MotoristaDTO.fromEntity(manifesto.getMotorista())
-                        : null
-        );
+                manifesto.getMotorista() != null ? MotoristaDTO.fromEntity(manifesto.getMotorista()) : null);
     }
 
     public Manifesto toEntity() {

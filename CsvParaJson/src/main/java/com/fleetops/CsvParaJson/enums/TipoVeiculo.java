@@ -1,7 +1,8 @@
 package com.fleetops.CsvParaJson.enums;
+
 import lombok.Getter;
 
-@Getter 
+@Getter
 public enum TipoVeiculo {
     URBANOS_EXPRESS("Urbanos Express"),
     URBANOS_DE_CARGA("Urbanos de Carga"),
@@ -14,6 +15,3 @@ public enum TipoVeiculo {
         this.descricao = descricao;
     }
 }
-
-
-

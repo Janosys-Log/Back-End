@@ -25,7 +25,8 @@ public class ValidarLinhasDoCsv<T> {
             if (eValido.isEmpty()) {
                 resultado.addValidos(objeto);
             } else {
-                List<String> msg = eValido.stream().map(ConstraintViolation::getMessage).collect(Collectors.toList());
+                List<String> msg =
+                        eValido.stream().map(ConstraintViolation::getMessage).collect(Collectors.toList());
                 resultado.addErros(new ErroLinhasDoCsv(nLinha, msg));
             }
             nLinha += 1;

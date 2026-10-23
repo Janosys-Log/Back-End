@@ -9,15 +9,12 @@ import com.fleetops.CsvParaJson.exceptions.tipos.NaoFoiPossivelAcharEncoding;
 import com.fleetops.CsvParaJson.exceptions.tipos.NaoFoiPossivelLerArquivo;
 import com.univocity.parsers.common.processor.BeanListProcessor;
 import com.univocity.parsers.csv.CsvParser;
-
-import lombok.RequiredArgsConstructor;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.List;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -25,7 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-@RequiredArgsConstructor 
+@RequiredArgsConstructor
 public class CsvParaJson<T> {
     @Autowired
     private CriadorDeParse<T> criadorDeParser;
@@ -42,19 +39,17 @@ public class CsvParaJson<T> {
     private final RabbitTemplate rabbitmq;
 
     public ResultadoLinhasDoCsv<T> RetornarJson(MultipartFile arquivo, Class<T> tipo, String filaParaEnviar) {
-        if(arquivo== null || tipo==null || filaParaEnviar==null){
+        if (arquivo == null || tipo == null || filaParaEnviar == null) {
             throw new ArquivoInexistente("Verifique sua requisição", "A requisição possui um arquivo faltando");
         }
         List<T> objetos = this.LerCsv(arquivo, tipo);
 
         ResultadoLinhasDoCsv<T> resultado = validador.Validar(objetos);
 
-       Boolean funcionou = rabbitmq.convertSendAndReceiveAsType(RabbitConfig.Exchange, 
-            filaParaEnviar, 
-            resultado,
-            new ParameterizedTypeReference<Boolean>() {});
-        if (funcionou==null){
-            throw new ErroDeServicodeConsumo("Problema ao salvar os dados do csv","Servico Não Respondeu");
+        Boolean funcionou = rabbitmq.convertSendAndReceiveAsType(
+                RabbitConfig.Exchange, filaParaEnviar, resultado, new ParameterizedTypeReference<Boolean>() {});
+        if (funcionou == null) {
+            throw new ErroDeServicodeConsumo("Problema ao salvar os dados do csv", "Servico Não Respondeu");
         }
 
         return resultado;
@@ -98,8 +93,7 @@ public class CsvParaJson<T> {
         }
 
         List<T> objetos = processador.getBeans();
-        
+
         return objetos;
     }
-
 }

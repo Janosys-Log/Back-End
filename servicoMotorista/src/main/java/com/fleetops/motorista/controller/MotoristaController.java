@@ -1,7 +1,9 @@
 package com.fleetops.motorista.controller;
 
+import com.fleetops.motorista.domain.StatusMotorista;
+import com.fleetops.motorista.dto.MotoristaDTO;
+import com.fleetops.motorista.service.ServicoMotorista;
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -11,15 +13,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fleetops.motorista.domain.StatusMotorista;
-import com.fleetops.motorista.dto.MotoristaDTO;
-import com.fleetops.motorista.service.ServicoMotorista;
-
 @RestController
 @RequestMapping("/api/motoristas")
 @CrossOrigin(origins = "*")
 public class MotoristaController {
-    @Autowired 
+    @Autowired
     private ServicoMotorista servico;
 
     @GetMapping

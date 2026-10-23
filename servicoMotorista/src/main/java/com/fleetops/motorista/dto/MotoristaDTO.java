@@ -1,42 +1,27 @@
 package com.fleetops.motorista.dto;
 
-import java.time.LocalDateTime;
-
 import com.fleetops.motorista.domain.Motorista;
 import com.fleetops.motorista.domain.StatusMotorista;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDateTime;
 
 public record MotoristaDTO(
-
         Long idMotorista,
-
         @NotBlank(message = "O nome do motorista é obrigatório")
-        @Size(max = 100, message = "O nome do motorista deve ter no máximo 100 caracteres")
-        String nomeMotorista,
-
+                @Size(max = 100, message = "O nome do motorista deve ter no máximo 100 caracteres")
+                String nomeMotorista,
         @NotBlank(message = "O CPF do motorista é obrigatório")
-        @Size(max = 11, message = "O CPF deve ter no máximo 11 dígitos numéricos")
-        String cpfMotorista,
-
-        @Size(max = 20, message = "O contato deve ter no máximo 20 caracteres")
-        String contatoMotorista,
-
+                @Size(max = 11, message = "O CPF deve ter no máximo 11 dígitos numéricos")
+                String cpfMotorista,
+        @Size(max = 20, message = "O contato deve ter no máximo 20 caracteres") String contatoMotorista,
         StatusMotorista status,
-
         LocalDateTime statusUpdatedAt,
-
         Integer contadorRotaSp,
-
         Float notaMedia,
-
         VeiculoDTO veiculo,
-
-        @NotNull(message = "O agregado ao qual o motorista pertence é obrigatório")
-        Long agregadoId
-) {
+        @NotNull(message = "O agregado ao qual o motorista pertence é obrigatório") Long agregadoId) {
 
     public static MotoristaDTO fromEntity(Motorista motorista) {
         return new MotoristaDTO(
@@ -48,11 +33,8 @@ public record MotoristaDTO(
                 motorista.getStatusUpdatedAt(),
                 motorista.getContadorRotaSp(),
                 motorista.getNotaMedia(),
-                motorista.getVeiculo() != null
-                        ? VeiculoDTO.fromEntity(motorista.getVeiculo())
-                        : null,
-                motorista.getAgregadoId()
-        );
+                motorista.getVeiculo() != null ? VeiculoDTO.fromEntity(motorista.getVeiculo()) : null,
+                motorista.getAgregadoId());
     }
 
     public Motorista toEntity() {

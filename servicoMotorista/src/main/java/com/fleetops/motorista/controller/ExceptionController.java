@@ -1,13 +1,12 @@
 package com.fleetops.motorista.controller;
 
+import com.fleetops.motorista.dto.ResponseErrorDTO;
+import com.fleetops.motorista.exceptions.FluxoStatusNaoEsperadoException;
+import com.fleetops.motorista.exceptions.MotoristaNaoEncontradoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-
-import com.fleetops.motorista.dto.ResponseErrorDTO;
-import com.fleetops.motorista.exceptions.FluxoStatusNaoEsperadoException;
-import com.fleetops.motorista.exceptions.MotoristaNaoEncontradoException;
 
 /**
  * Handler global de exceções para retornar mensagens claras de validação.

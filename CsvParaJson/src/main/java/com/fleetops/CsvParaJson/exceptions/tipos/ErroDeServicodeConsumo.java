@@ -2,9 +2,10 @@ package com.fleetops.CsvParaJson.exceptions.tipos;
 
 public class ErroDeServicodeConsumo extends RuntimeException {
     private String mensagemErro;
-    public  ErroDeServicodeConsumo(String mensagemErro,String titulo){
+
+    public ErroDeServicodeConsumo(String mensagemErro, String titulo) {
         super(titulo);
-      this.mensagemErro=mensagemErro;
+        this.mensagemErro = mensagemErro;
     }
 
     public String getMensagemErro() {
@@ -14,5 +15,4 @@ public class ErroDeServicodeConsumo extends RuntimeException {
     public void setMensagemErro(String mensagemErro) {
         this.mensagemErro = mensagemErro;
     }
-    
 }

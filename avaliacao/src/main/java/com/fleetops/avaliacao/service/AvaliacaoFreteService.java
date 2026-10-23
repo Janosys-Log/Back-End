@@ -6,8 +6,10 @@ import com.fleetops.avaliacao.dto.AvaliacaoRequestDTO;
 import com.fleetops.avaliacao.dto.AvaliacaoResponseDTO;
 import com.fleetops.avaliacao.repository.AvaliacaoFreteRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Serviço de avaliações de frete.
@@ -44,6 +46,24 @@ public class AvaliacaoFreteService {
                 .descricaoNota(escala.getDescricao())
                 .feedback(salva.getFeedback())
                 .dataRegistro(salva.getDataRegistro())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public AvaliacaoResponseDTO buscarPorId(Long id) {
+        AvaliacaoFrete a = repository
+                .findById(id)
+                .orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Avaliação não encontrada: " + id));
+
+        return AvaliacaoResponseDTO.builder()
+                .id(a.getId())
+                .motoristaId(a.getMotoristaId())
+                .nota(a.getNota())
+                .numeroManifesto(a.getNumeroManifesto())
+                .descricaoNota(EscalaNota.fromValor(a.getNota()).getDescricao())
+                .feedback(a.getFeedback())
+                .dataRegistro(a.getDataRegistro())
                 .build();
     }
 }

@@ -1,16 +1,14 @@
 package com.fleetops.motorista.service;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.fleetops.motorista.domain.Motorista;
 import com.fleetops.motorista.domain.StatusMotorista;
 import com.fleetops.motorista.domain.Veiculo;
 import com.fleetops.motorista.ouvinte.dto.response.VeiculoDTO;
 import com.fleetops.motorista.repository.MotoristaRepository;
+import java.util.List;
+import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class ServicoMotorista {
@@ -55,7 +53,8 @@ public class ServicoMotorista {
         try {
             Motorista motoristaBanco = new Motorista();
             Veiculo veiculo = new Veiculo();
-            veiculo.setAgregadoId(servicoAgregado.pegarPorCnpj(csvVeiculo.getCnpjagregado()).getIdAgregado());
+            veiculo.setAgregadoId(
+                    servicoAgregado.pegarPorCnpj(csvVeiculo.getCnpjagregado()).getIdAgregado());
             veiculo.setPlacaVeiculo(csvVeiculo.getPlaca());
             veiculo.setSubtipoVeiculo(csvVeiculo.getSubtipoVeiculo());
             veiculo.setTipoVeiculo(csvVeiculo.getSubtipoVeiculo().getTipo());
@@ -76,7 +75,8 @@ public class ServicoMotorista {
             motoristaBanco.setContatoMotorista(csvVeiculo.getContatomotorista());
             motoristaBanco.setCpfMotorista(csvVeiculo.getCpfmotorista());
             motoristaBanco.setNomeMotorista(csvVeiculo.getMotorista());
-            motoristaBanco.setAgregadoId(servicoAgregado.pegarPorCnpj(csvVeiculo.getCnpjagregado()).getIdAgregado());
+            motoristaBanco.setAgregadoId(
+                    servicoAgregado.pegarPorCnpj(csvVeiculo.getCnpjagregado()).getIdAgregado());
             motoristaRepo.save(motoristaBanco);
 
         } catch (Exception e) {
