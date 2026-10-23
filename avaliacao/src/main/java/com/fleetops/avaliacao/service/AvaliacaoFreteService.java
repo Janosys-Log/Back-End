@@ -5,6 +5,7 @@ import com.fleetops.avaliacao.domain.EscalaNota;
 import com.fleetops.avaliacao.dto.AvaliacaoRequestDTO;
 import com.fleetops.avaliacao.dto.AvaliacaoResponseDTO;
 import com.fleetops.avaliacao.repository.AvaliacaoFreteRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -24,9 +25,8 @@ public class AvaliacaoFreteService {
 
     @Transactional
     public AvaliacaoResponseDTO registrar(AvaliacaoRequestDTO request) {
-        // Validação adicional da escala (já coberta pelo @Min/@Max, mas reforça regra
-        // de negócio)
-        EscalaNota escala = EscalaNota.fromValor(request.getNota());
+        // Validação adicional da escala (já coberta pelo @Min/@Max, mas reforça regra de negócio)
+        EscalaNota.fromValor(request.getNota());
 
         AvaliacaoFrete avaliacao = AvaliacaoFrete.builder()
                 .nota(request.getNota())
@@ -37,25 +37,28 @@ public class AvaliacaoFreteService {
 
         AvaliacaoFrete salva = repository.save(avaliacao);
 
-        return AvaliacaoResponseDTO.builder()
-                .mensagem("Avaliação registrada com sucesso")
-                .id(salva.getId())
-                .motoristaId(salva.getMotoristaId())
-                .nota(salva.getNota())
-                .numeroManifesto(salva.getNumeroManifesto())
-                .descricaoNota(escala.getDescricao())
-                .feedback(salva.getFeedback())
-                .dataRegistro(salva.getDataRegistro())
-                .build();
+        AvaliacaoResponseDTO response = toResponse(salva);
+        response.setMensagem("Avaliação registrada com sucesso");
+        return response;
     }
 
     @Transactional(readOnly = true)
     public AvaliacaoResponseDTO buscarPorId(Long id) {
-        AvaliacaoFrete a = repository
+        return repository
                 .findById(id)
-                .orElseThrow(
-                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Avaliação não encontrada: " + id));
+                .map(this::toResponse)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Avaliação não encontrada: " + id));
+    }
 
+    @Transactional(readOnly = true)
+    public List<AvaliacaoResponseDTO> listarPorMotorista(Long motoristaId) {
+        return repository.findByMotoristaIdOrderByDataRegistroDesc(motoristaId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    private AvaliacaoResponseDTO toResponse(AvaliacaoFrete a) {
         return AvaliacaoResponseDTO.builder()
                 .id(a.getId())
                 .motoristaId(a.getMotoristaId())
