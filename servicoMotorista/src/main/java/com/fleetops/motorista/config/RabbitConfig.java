@@ -17,6 +17,9 @@ public class RabbitConfig {
     public static final String Excharge = "veiculo.excharge";
     public static final String routing_key_veiculosJson = "retornojsonVeiculos.queue";
     public static final String routing_key_ManifestoJson = "retornoJsonManifesto.queue";
+    public static final String exchangeManifesto = "manifesto.consulta.exchange";
+    public static final String routing_key_consulta_manifesto = "manifesto.existe";
+    public static final String filaConsultaManifesto = "manifesto.existe.queue";
 
     @Bean
     public DirectExchange excharge() {
@@ -41,6 +44,23 @@ public class RabbitConfig {
     @Bean
     public Binding bidingManifesto() {
         return BindingBuilder.bind(filaManifesto()).to(excharge()).with(routing_key_ManifestoJson);
+    }
+
+    @Bean
+    public DirectExchange consultaManifestoExchange() {
+        return new DirectExchange(exchangeManifesto);
+    }
+
+    @Bean
+    public Queue consultaManifestoQueue() {
+        return QueueBuilder.durable(filaConsultaManifesto).build();
+    }
+
+    @Bean
+    public Binding consultaManifestoBinding() {
+        return BindingBuilder.bind(consultaManifestoQueue())
+                .to(consultaManifestoExchange())
+                .with(routing_key_consulta_manifesto);
     }
 
     @Bean

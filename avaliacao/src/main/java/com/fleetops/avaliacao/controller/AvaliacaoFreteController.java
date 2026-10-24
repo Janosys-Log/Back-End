@@ -1,5 +1,6 @@
 package com.fleetops.avaliacao.controller;
 
+import com.fleetops.avaliacao.domain.AvaliacaoFrete;
 import com.fleetops.avaliacao.dto.AvaliacaoRequestDTO;
 import com.fleetops.avaliacao.dto.AvaliacaoResponseDTO;
 import com.fleetops.avaliacao.service.AvaliacaoFreteService;
@@ -38,52 +39,43 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Avaliações de Frete", description = "Endpoints para registro e consulta de avaliações de motoristas")
 public class AvaliacaoFreteController {
 
-    private final AvaliacaoFreteService service;
+        private final AvaliacaoFreteService service;
 
+        @GetMapping
+        @Operation(summary = "Listar avaliações de frete", description = "Retorna a lista de todas as avaliações de frete cadastradas.")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "Avaliações retornadas com sucesso", content = @Content(array = @ArraySchema(schema = @Schema(implementation = AvaliacaoResponseDTO.class)))),
+                        @ApiResponse(responseCode = "500", description = "Erro interno ao consultar o banco de dados")
+        })
+        public ResponseEntity<List<AvaliacaoResponseDTO>> listarTodos() {
+                return new ResponseEntity<List<AvaliacaoResponseDTO>>(this.service.listarAvaliacoes(), HttpStatus.OK);
+        }
 
-    @PostMapping
-    @Operation(
-            summary = "Registrar avaliação de frete",
-            description =
-                    """
-                    Recebe nota (1 a 5), número do manifesto e feedback obrigatórios, vinculando-os ao motorista informado.
-                    Escala: 1=Péssimo, 2=Ruim, 3=Regular, 4=Bom, 5=Excelente.
-                    A avaliação fica associada ao motorista e à data de registro para uso futuro no ranking.
-                    """)
-    @ApiResponses({
-        @ApiResponse(
-                responseCode = "201",
-                description = "Avaliação registrada com sucesso",
-                content = @Content(schema = @Schema(implementation = AvaliacaoResponseDTO.class))),
-        @ApiResponse(
-                responseCode = "400",
-                description = "Dados inválidos (nota fora de 1-5, campos obrigatórios ausentes)"),
-        @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    })
-    public ResponseEntity<AvaliacaoResponseDTO> registrar(@Valid @RequestBody AvaliacaoRequestDTO request) {
-        AvaliacaoResponseDTO response = service.registrar(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
+        @GetMapping("/{id}")
+        @Operation(summary = "Buscar avaliação de frete por ID", description = "Retorna a avaliação de frete correspondente ao ID informado.")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "Avaliação retornada com sucesso", content = @Content(schema = @Schema(implementation = AvaliacaoResponseDTO.class))),
+                        @ApiResponse(responseCode = "404", description = "Avaliação não encontrada para o ID informado"),
+                        @ApiResponse(responseCode = "500", description = "Erro interno ao consultar o banco de dados")
+        })
+        public ResponseEntity<AvaliacaoResponseDTO> buscarPorId(@PathVariable Long id) {
+                return new ResponseEntity<AvaliacaoResponseDTO>(this.service.buscarAvaliacao(id), HttpStatus.OK);
+        }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Buscar avaliação por id")
-    @ApiResponses({
-        @ApiResponse(
-                responseCode = "200",
-                description = "Avaliação encontrada",
-                content = @Content(schema = @Schema(implementation = AvaliacaoResponseDTO.class))),
-        @ApiResponse(responseCode = "404", description = "Avaliação não encontrada")
-    })
-    public ResponseEntity<AvaliacaoResponseDTO> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(service.buscarPorId(id));
-    }
-
-    @GetMapping
-    @Operation(
-            summary = "Listar avaliações de um motorista",
-            description = "Retorna todas as avaliações do motorista, da mais recente para a mais antiga.")
-    @ApiResponse(responseCode = "200", description = "Lista de avaliações (vazia se o motorista não tiver nenhuma)")
-    public ResponseEntity<List<AvaliacaoResponseDTO>> listarPorMotorista(@RequestParam Long motoristaId) {
-        return ResponseEntity.ok(service.listarPorMotorista(motoristaId));
-    }
+        @PostMapping
+        @Operation(summary = "Registrar avaliação de frete", description = """
+                        Recebe nota (1 a 5), número do manifesto e feedback obrigatórios, vinculando-os ao motorista informado.
+                        Escala: 1=Péssimo, 2=Ruim, 3=Regular, 4=Bom, 5=Excelente.
+                        A avaliação fica associada ao motorista e à data de registro para uso futuro no ranking.
+                        """)
+        @ApiResponses({
+                        @ApiResponse(responseCode = "201", description = "Avaliação registrada com sucesso", content = @Content(schema = @Schema(implementation = AvaliacaoResponseDTO.class))),
+                        @ApiResponse(responseCode = "400", description = "Dados inválidos (nota fora de 1-5, campos obrigatórios ausentes)"),
+                        @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+        })
+        public ResponseEntity<AvaliacaoResponseDTO> registrar(@Valid @RequestBody AvaliacaoRequestDTO request) {
+                AvaliacaoFrete avaliacao = service.verificacaAvaliacao(request);
+                AvaliacaoResponseDTO response = service.registrar(avaliacao);
+                return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        }
 }
