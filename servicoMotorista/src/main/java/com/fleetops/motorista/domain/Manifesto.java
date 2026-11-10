@@ -6,6 +6,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -46,6 +48,14 @@ public class Manifesto {
 
     @Column(name = "valor_recebido", precision = 12, scale = 2)
     private BigDecimal valorRecebido;
+    
+    @PrePersist
+    @PreUpdate
+    private void calcularValorRecebido() {
+    BigDecimal empresa = freteEmpresa != null ? freteEmpresa : BigDecimal.ZERO;
+    BigDecimal motorista = freteAgregado != null ? freteAgregado : BigDecimal.ZERO;
+    this.valorRecebido = empresa.subtract(motorista);
+}
 
     @Column(name = "freteEmp", precision = 12, scale = 2)
     private BigDecimal freteEmpresa;

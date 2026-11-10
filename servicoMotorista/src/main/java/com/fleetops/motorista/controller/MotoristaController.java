@@ -44,4 +44,5 @@ public class MotoristaController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
 }
