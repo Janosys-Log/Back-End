@@ -47,7 +47,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         } catch (JwtException | IllegalArgumentException e) {
-            // token inválido: segue sem autenticação, o Security devolve 401/403
+            org.slf4j.LoggerFactory.getLogger(JwtAuthenticationFilter.class)
+                    .warn("JWT recusado em {} {}: {}", request.getMethod(), request.getRequestURI(), e.getMessage());
         }
 
         chain.doFilter(request, response);
