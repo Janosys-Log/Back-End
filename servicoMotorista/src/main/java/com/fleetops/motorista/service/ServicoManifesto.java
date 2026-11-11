@@ -1,6 +1,7 @@
 package com.fleetops.motorista.service;
 
 import com.fleetops.motorista.domain.Manifesto;
+import com.fleetops.motorista.domain.RendimentoMensal;
 import com.fleetops.motorista.dto.RentabilidadeDTO;
 import com.fleetops.motorista.dto.ResponseDate;
 import com.fleetops.motorista.ouvinte.dto.response.ManifestoDTO;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -98,5 +100,30 @@ public class ServicoManifesto {
         }
 
         return new RentabilidadeDTO(mes, ano, rentabilidadeMedia, crescimento, (long) listaMnifestos.size());
+    }
+
+    public HashMap<Integer, RentabilidadeDTO> RentabilidadeNoUltimosMeses(LocalDate inicio, LocalDate fim) {
+        HashMap<Integer, RentabilidadeDTO> map = new HashMap<>();
+        BigDecimal anterior = BigDecimal.ZERO;
+        List<RendimentoMensal> rendimentos = manifestoRepo.RendimentoMedioPorMeses(inicio, fim);
+
+        for (RendimentoMensal rendimento : rendimentos) {
+            BigDecimal crescimento = BigDecimal.ZERO;
+            if (anterior.compareTo(BigDecimal.ZERO) != 0) {
+                crescimento = rendimento
+                        .rendimentoMedio()
+                        .subtract(anterior)
+                        .divide(anterior, 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100))
+                        .setScale(2, RoundingMode.HALF_UP);
+            }
+
+            RentabilidadeDTO rentabilidade = new RentabilidadeDTO(
+                    (long) rendimento.mes(), (long) rendimento.ano(), rendimento.rendimentoMedio(), crescimento, (long)
+                            rendimento.numeroManifestos());
+            map.put(rendimento.mes(), rentabilidade);
+            anterior = rendimento.rendimentoMedio();
+        }
+        return map;
     }
 }

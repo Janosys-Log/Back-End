@@ -4,6 +4,8 @@ import com.fleetops.motorista.dto.ManifestoDTO;
 import com.fleetops.motorista.dto.RentabilidadeDTO;
 import com.fleetops.motorista.dto.ResponseDate;
 import com.fleetops.motorista.service.ServicoManifesto;
+import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -48,8 +50,10 @@ public class ManifestoController {
         return ResponseEntity.ok(rentabilidade);
     }
 
-    @GetMapping("/rentabilidadeGeral")
-    public ResponseEntity<RentabilidadeDTO> rentabilidadeGeralDaEmpresa() {
-        return 
+    @GetMapping("/rentabilidadeGeral/{inicio}/{fim}")
+    public ResponseEntity<HashMap<Integer, RentabilidadeDTO>> rentabilidadeGeralDaEmpresa(
+            @PathVariable LocalDate inicio, @PathVariable LocalDate fim) {
+        HashMap<Integer, RentabilidadeDTO> dadosDeAcordoComAsDatas = servico.RentabilidadeNoUltimosMeses(inicio, fim);
+        return ResponseEntity.ok(dadosDeAcordoComAsDatas);
     }
 }
