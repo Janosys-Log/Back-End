@@ -9,10 +9,8 @@ import com.fleetops.avaliacao.exception.AvaliacaoNaoEncontrada;
 import com.fleetops.avaliacao.repository.AvaliacaoFreteRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Serviço de avaliações de frete.
@@ -24,11 +22,16 @@ import org.springframework.web.server.ResponseStatusException;
 public class AvaliacaoFreteService {
 
     private final AvaliacaoFreteRepository repository;
-    private final ManifestoClient manifestoClient;
 
     public List<AvaliacaoResponseDTO> listarAvaliacoes() {
         List<AvaliacaoFrete> avaliacoes = this.repository.findAll();
         return avaliacoes.stream()
+                .map(a -> AvaliacaoResponseDTOMapper.toDTO(a, "", ""))
+                .toList();
+    }
+
+    public List<AvaliacaoResponseDTO> listarPorMotorista(Long motoristaId) {
+        return this.repository.findByMotoristaIdOrderByDataRegistroDesc(motoristaId).stream()
                 .map(a -> AvaliacaoResponseDTOMapper.toDTO(a, "", ""))
                 .toList();
     }
@@ -41,13 +44,12 @@ public class AvaliacaoFreteService {
         return AvaliacaoResponseDTOMapper.toDTO(avaliacao, "", "");
     }
 
+    /**
+     * Monta a entidade a partir do request.
+     * Não valida existência do manifesto na base importada:
+     * o número digitado no modal de "colocar em rota" é gravado em num_modal.
+     */
     public AvaliacaoFrete verificacaAvaliacao(AvaliacaoRequestDTO request) {
-        Long manifestoId = request.getNumeroManifesto().longValue();
-
-        if (!manifestoClient.existe(manifestoId)) {
-            throw new IllegalArgumentException("Manifesto não encontrado");
-        }
-
         return AvaliacaoFrete.builder()
                 .nota(request.getNota())
                 .numeroManifesto(request.getNumeroManifesto())

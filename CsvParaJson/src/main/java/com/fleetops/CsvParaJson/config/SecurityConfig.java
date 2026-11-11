@@ -27,6 +27,10 @@ public class SecurityConfig {
                                 .permitAll()
                                 .requestMatchers("/actuator/health/**")
                                 .permitAll()
+                                // Sem isto, qualquer erro interno (500/400) vira 401: o redirecionamento
+                                // do Spring para /error chega sem autenticação e é barrado.
+                                .requestMatchers("/error")
+                                .permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS, "/**")
                                 .permitAll()
                                 .anyRequest()

@@ -18,6 +18,7 @@ public record MotoristaDTO(
         @Size(max = 20, message = "O contato deve ter no máximo 20 caracteres") String contatoMotorista,
         StatusMotorista status,
         LocalDateTime statusUpdatedAt,
+        Long manifestoAtual,
         Integer contadorRotaSp,
         Float notaMedia,
         VeiculoDTO veiculo,
@@ -31,6 +32,7 @@ public record MotoristaDTO(
                 motorista.getContatoMotorista(),
                 motorista.getStatus(),
                 motorista.getStatusUpdatedAt(),
+                motorista.getManifestoAtual(),
                 motorista.getContadorRotaSp(),
                 motorista.getNotaMedia(),
                 motorista.getVeiculo() != null ? VeiculoDTO.fromEntity(motorista.getVeiculo()) : null,
@@ -45,6 +47,7 @@ public record MotoristaDTO(
                 .contatoMotorista(this.contatoMotorista)
                 .status(this.status != null ? this.status : StatusMotorista.Disponivel)
                 .statusUpdatedAt(this.statusUpdatedAt)
+                .manifestoAtual(this.manifestoAtual)
                 .contadorRotaSp(this.contadorRotaSp != null ? this.contadorRotaSp : 0)
                 .notaMedia(this.notaMedia != null ? this.notaMedia : 0.0f)
                 .veiculo(this.veiculo != null ? this.veiculo.toEntity() : null)
