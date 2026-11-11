@@ -1,6 +1,7 @@
 package com.fleetops.motorista.controller;
 
 import com.fleetops.motorista.dto.ManifestoDTO;
+import com.fleetops.motorista.dto.RentabilidadeDTO;
 import com.fleetops.motorista.dto.ResponseDate;
 import com.fleetops.motorista.service.ServicoManifesto;
 import java.util.List;
@@ -37,5 +38,18 @@ public class ManifestoController {
         return servico.buscarDataUltimoManifesto()
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/rentabilidade/{id}/{mes}/{ano}")
+    public ResponseEntity<RentabilidadeDTO> rentabilidadeMediaPorIdMotorista(
+            @PathVariable Long id, @PathVariable Long mes, @PathVariable Long ano) {
+        RentabilidadeDTO rentabilidade = servico.RentabilidademanifestosPorMotoristaEAnoEMes(id, mes, ano);
+
+        return ResponseEntity.ok(rentabilidade);
+    }
+
+    @GetMapping("/rentabilidadeGeral")
+    public ResponseEntity<RentabilidadeDTO> rentabilidadeGeralDaEmpresa() {
+        return 
     }
 }
