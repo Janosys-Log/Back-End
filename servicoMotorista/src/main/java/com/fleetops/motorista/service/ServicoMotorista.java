@@ -3,8 +3,12 @@ package com.fleetops.motorista.service;
 import com.fleetops.motorista.domain.Motorista;
 import com.fleetops.motorista.domain.StatusMotorista;
 import com.fleetops.motorista.domain.Veiculo;
+import com.fleetops.motorista.dto.MotoristaDTO;
+import com.fleetops.motorista.dto.MotoristaRendimentoDTO;
+import com.fleetops.motorista.dto.RentabilidadeDTO;
 import com.fleetops.motorista.ouvinte.dto.response.VeiculoDTO;
 import com.fleetops.motorista.repository.MotoristaRepository;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,5 +90,26 @@ public class ServicoMotorista {
             System.out.println("Cpf:" + csvVeiculo.getCpfmotorista());
             System.out.println("Contato:" + csvVeiculo.getContatomotorista());
         }
+    }
+
+    public List<MotoristaRendimentoDTO> rankingMotorista(LocalDate inicio, LocalDate fim) {
+        List<MotoristaRendimentoDTO> listaMoto = motoristaRepo.rankingMotoristas(inicio, fim).stream()
+                .map(item -> new MotoristaRendimentoDTO(
+                        MotoristaDTO.fromEntity(item.motorista()),
+                        item.rendimento() != null
+                                ? new RentabilidadeDTO(
+                                        item.rendimento().mes() != null
+                                                ? item.rendimento().mes().longValue()
+                                                : null,
+                                        item.rendimento().ano() != null
+                                                ? item.rendimento().ano().longValue()
+                                                : null,
+                                        item.rendimento().rendimentoMedio(),
+                                        null, // Caso tenha o campo de crescimento, ajuste aqui
+                                        item.rendimento().numeroManifestos(),
+                                        item.rendimento().rendimentoTotal())
+                                : null))
+                .toList();
+        return listaMoto;
     }
 }

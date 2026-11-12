@@ -1,7 +1,9 @@
 package com.fleetops.motorista.repository;
 
 import com.fleetops.motorista.domain.Motorista;
+import com.fleetops.motorista.domain.MotoristaRendimento;
 import com.fleetops.motorista.domain.StatusMotorista;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -27,4 +29,18 @@ public interface MotoristaRepository extends JpaRepository<Motorista, Long> {
     @Query("SELECT m FROM Motorista m WHERE m.status = :status AND m.statusUpdatedAt <= :limite")
     List<Motorista> findIndisponiveisAntigos(
             @Param("status") StatusMotorista status, @Param("limite") LocalDateTime limite);
+
+    @Query(
+            """
+    select new com.fleetops.motorista.domain.MotoristaRendimento(
+        mo,
+        year(mani.dataManifesto), month(mani.dataManifesto),
+        avg(mani.valorRecebido), count(mani), sum(mani.valorRecebido))
+    from Motorista mo
+    join Manifesto mani on mani.motorista = mo
+    where mani.dataManifesto between :inicio and :fim
+    group by mo, year(mani.dataManifesto), month(mani.dataManifesto)
+    order by avg(mani.valorRecebido) desc
+    """)
+    List<MotoristaRendimento> rankingMotoristas(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 }

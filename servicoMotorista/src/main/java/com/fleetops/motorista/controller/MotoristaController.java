@@ -2,7 +2,9 @@ package com.fleetops.motorista.controller;
 
 import com.fleetops.motorista.domain.StatusMotorista;
 import com.fleetops.motorista.dto.MotoristaDTO;
+import com.fleetops.motorista.dto.MotoristaRendimentoDTO;
 import com.fleetops.motorista.service.ServicoMotorista;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -43,5 +45,12 @@ public class MotoristaController {
                 .map(MotoristaDTO::fromEntity)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/rankingPorData/{inicio}/{fim}")
+    public ResponseEntity<List<MotoristaRendimentoDTO>> rankingMotorista(
+            @PathVariable LocalDate inicio, @PathVariable LocalDate fim) {
+
+        return ResponseEntity.ok(servico.rankingMotorista(inicio, fim));
     }
 }

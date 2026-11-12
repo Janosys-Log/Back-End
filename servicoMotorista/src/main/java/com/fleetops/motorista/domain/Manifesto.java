@@ -10,7 +10,6 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
@@ -38,8 +37,7 @@ public class Manifesto {
     @Column(name = "data_manifesto")
     private LocalDate dataManifesto;
 
-    @Size(max = 100, message = "O destino deve ter no máximo 100 caracteres")
-    @Column(name = "destino", length = 100)
+    @Column(name = "destino", columnDefinition = "TEXT")
     private String destino;
 
     @CreationTimestamp
@@ -63,7 +61,7 @@ public class Manifesto {
     @Column(name = "freteAgregado", precision = 12, scale = 2)
     private BigDecimal freteAgregado;
 
-    @Column(name = "observacoes")
+    @Column(name = "observacoes", columnDefinition = "TEXT")
     private String observacoes;
 
     @ManyToOne(fetch = FetchType.EAGER)

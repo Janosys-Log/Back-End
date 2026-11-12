@@ -8,18 +8,21 @@ public class RentabilidadeDTO {
     private BigDecimal rentabilidadeMedia;
     private BigDecimal crescimentoComparadoComOMesPassado;
     private Long numeroDeManifestos;
+    private BigDecimal rendimentoTotal;
 
     public RentabilidadeDTO(
             Long mes,
             Long ano,
             BigDecimal rentabilidade,
             BigDecimal crescimentoEmPorcentagem,
-            Long numeroDeManifestos) {
+            Long numeroDeManifestos,
+            BigDecimal rendimentoTotal) {
         this.mes = mes;
         this.ano = ano;
         this.rentabilidadeMedia = rentabilidade;
         this.crescimentoComparadoComOMesPassado = crescimentoEmPorcentagem;
         this.numeroDeManifestos = numeroDeManifestos;
+        this.rendimentoTotal = rendimentoTotal;
     }
 
     public Long getAno() {
@@ -60,5 +63,13 @@ public class RentabilidadeDTO {
 
     public void setNumeroDeManifestos(Long numeroDeManifestos) {
         this.numeroDeManifestos = numeroDeManifestos;
+    }
+
+    public BigDecimal getRendimentoTotal() {
+        return rendimentoTotal;
+    }
+
+    public void setRendimentoTotal(BigDecimal rendimentoTotal) {
+        this.rendimentoTotal = rendimentoTotal;
     }
 }

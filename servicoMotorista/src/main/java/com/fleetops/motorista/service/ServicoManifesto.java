@@ -99,7 +99,11 @@ public class ServicoManifesto {
                     .setScale(2, RoundingMode.HALF_UP);
         }
 
-        return new RentabilidadeDTO(mes, ano, rentabilidadeMedia, crescimento, (long) listaMnifestos.size());
+        BigDecimal rentabilidadeTotal =
+                listaMnifestos.stream().map(m -> m.getValorRecebido()).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new RentabilidadeDTO(
+                mes, ano, rentabilidadeMedia, crescimento, (long) listaMnifestos.size(), rentabilidadeTotal);
     }
 
     public HashMap<Integer, RentabilidadeDTO> RentabilidadeNoUltimosMeses(LocalDate inicio, LocalDate fim) {
@@ -119,8 +123,12 @@ public class ServicoManifesto {
             }
 
             RentabilidadeDTO rentabilidade = new RentabilidadeDTO(
-                    (long) rendimento.mes(), (long) rendimento.ano(), rendimento.rendimentoMedio(), crescimento, (long)
-                            rendimento.numeroManifestos());
+                    (long) rendimento.mes(),
+                    (long) rendimento.ano(),
+                    rendimento.rendimentoMedio(),
+                    crescimento,
+                    (long) rendimento.numeroManifestos(),
+                    rendimento.rendimentoTotal());
             map.put(rendimento.mes(), rentabilidade);
             anterior = rendimento.rendimentoMedio();
         }

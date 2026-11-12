@@ -23,7 +23,13 @@ public interface ManifestoRepositorio extends JpaRepository<Manifesto, Long> {
 
     @Query(
             """
-      select new com.fleetops.motorista.domain.RendimentoMensal( year(m.dataManifesto),month(m.dataManifesto),sum(m.valorRecebido)/count(m),count(m))
+      select new com.fleetops.motorista.domain.RendimentoMensal(
+      year(m.dataManifesto),
+      month(m.dataManifesto),
+      sum(m.valorRecebido)/count(m),
+      count(m),
+      sum(m.valorRecebido)
+      )
        from Manifesto m
       where m.dataManifesto between :inicio and :fim
       group by year(m.dataManifesto),month(m.dataManifesto)
