@@ -15,10 +15,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
+import java.util.Objects;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "motorista")
@@ -57,6 +60,14 @@ public class Motorista {
     @Column(name = "status_updated_at")
     private LocalDateTime statusUpdatedAt;
 
+    /**
+     * Número do manifesto da rota em andamento. Só tem valor enquanto o status é Em_Rota.
+     * Não é chave estrangeira: o manifesto real pode ainda não ter sido importado do CSV.
+     */
+    @Setter(AccessLevel.NONE)
+    @Column(name = "manifesto_atual")
+    private Long manifestoAtual;
+
     @Column(name = "contador_rota_sp")
     @Builder.Default
     private Integer contadorRotaSp = 0;
@@ -78,8 +89,21 @@ public class Motorista {
     @Column(name = "agregado_id")
     private Long agregadoId;
 
-    public void atualizaStatus(StatusMotorista status) {
-        this.status = status;
+    public void iniciarRota(Long numeroManifesto) {
+        Objects.requireNonNull(numeroManifesto, "Não é possível iniciar a rota sem o número do manifesto");
+        registrarStatus(StatusMotorista.Em_Rota, numeroManifesto);
+    }
+
+    public void atualizaStatus(StatusMotorista novoStatus) {
+        if (novoStatus == StatusMotorista.Em_Rota) {
+            throw new IllegalArgumentException("Para entrar em rota use iniciarRota(numeroManifesto)");
+        }
+        registrarStatus(novoStatus, null);
+    }
+
+    private void registrarStatus(StatusMotorista novoStatus, Long numeroManifesto) {
+        this.status = novoStatus;
+        this.manifestoAtual = numeroManifesto;
         this.statusUpdatedAt = LocalDateTime.now();
     }
 }

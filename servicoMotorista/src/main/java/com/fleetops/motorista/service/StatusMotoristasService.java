@@ -4,35 +4,68 @@ import com.fleetops.motorista.domain.Motorista;
 import com.fleetops.motorista.domain.StatusMotorista;
 import com.fleetops.motorista.dto.StatusDTO;
 import com.fleetops.motorista.exceptions.FluxoStatusNaoEsperadoException;
+import com.fleetops.motorista.exceptions.ManifestoEmUsoException;
+import com.fleetops.motorista.exceptions.ManifestoObrigatorioException;
 import com.fleetops.motorista.exceptions.MotoristaNaoEncontradoException;
 import com.fleetops.motorista.repository.MotoristaRepository;
-import java.util.Optional;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class StatusMotoristasService {
     private final MotoristaRepository motoristaRepository;
 
-    StatusMotoristasService(MotoristaRepository repository) {
-        this.motoristaRepository = repository;
+    public void atualizaStatusMotorista(StatusDTO statusDTO) {
+        Motorista motorista = buscarMotorista(statusDTO.getMotoristaId());
+        StatusMotorista novoStatus = statusDTO.getStatus();
+
+        validarFluxo(motorista, novoStatus);
+
+        if (novoStatus == StatusMotorista.Em_Rota) {
+            colocarEmRota(motorista, statusDTO.getNumeroManifesto());
+        } else {
+            motorista.atualizaStatus(novoStatus);
+        }
+
+        motoristaRepository.save(motorista);
     }
 
-    public ResponseEntity<String> atualizaStatusMotorista(StatusDTO statusDTO) {
-        Optional<Motorista> motoristaOpt = this.motoristaRepository.findById(statusDTO.getMotoristaId());
-        Motorista motorista =
-                motoristaOpt.orElseThrow(() -> new MotoristaNaoEncontradoException(statusDTO.getMotoristaId()));
+    private Motorista buscarMotorista(Long idMotorista) {
+        return motoristaRepository
+                .findById(idMotorista)
+                .orElseThrow(() -> new MotoristaNaoEncontradoException(idMotorista));
+    }
 
-        if (motorista.getStatus() == StatusMotorista.Disponivel
-                && (statusDTO.getStatus() != StatusMotorista.Em_Rota
-                        && statusDTO.getStatus() != StatusMotorista.Indisponivel
-                        && statusDTO.getStatus() != StatusMotorista.Indesejado))
-            throw new FluxoStatusNaoEsperadoException(statusDTO.getStatus());
+    private void validarFluxo(Motorista motorista, StatusMotorista novoStatus) {
+        StatusMotorista atual = motorista.getStatus();
 
-        motorista.atualizaStatus(statusDTO.getStatus());
-        motoristaRepository.save(motorista);
+        // Já disponível e tenta marcar disponível de novo
+        if (atual == StatusMotorista.Disponivel && novoStatus == StatusMotorista.Disponivel) {
+            throw new FluxoStatusNaoEsperadoException(novoStatus);
+        }
 
-        return new ResponseEntity<String>("Status alterado com sucesso", HttpStatus.NO_CONTENT);
+        // Em rota: só pode concluir (ir para Disponível). Indisponível/Indesejado bloqueados.
+        if (atual == StatusMotorista.Em_Rota && novoStatus != StatusMotorista.Disponivel) {
+            throw new FluxoStatusNaoEsperadoException(novoStatus);
+        }
+    }
+
+    private void colocarEmRota(Motorista motorista, Long numeroManifesto) {
+        validarManifestoParaEntrarEmRota(motorista, numeroManifesto);
+        motorista.iniciarRota(numeroManifesto);
+    }
+
+    private void validarManifestoParaEntrarEmRota(Motorista motorista, Long numeroManifesto) {
+        if (numeroManifesto == null) {
+            throw new ManifestoObrigatorioException();
+        }
+        if (manifestoEstaEmUsoPorOutroMotorista(motorista, numeroManifesto)) {
+            throw new ManifestoEmUsoException(numeroManifesto);
+        }
+    }
+
+    private boolean manifestoEstaEmUsoPorOutroMotorista(Motorista motorista, Long numeroManifesto) {
+        return motoristaRepository.existsByManifestoAtualAndIdMotoristaNot(numeroManifesto, motorista.getIdMotorista());
     }
 }

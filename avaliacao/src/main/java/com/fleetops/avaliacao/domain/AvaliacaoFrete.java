@@ -43,10 +43,10 @@ public class AvaliacaoFrete {
     private String feedback;
 
     /**
-     * Número do manifesto identificar a rota realizada
-     * e auxiliar a análise do gerente operacional (obrigatório)
+     * Número do manifesto informado no modal ao colocar o motorista em rota.
+     * Coluna num_modal — não exige que o manifesto exista na base importada.
      */
-    @Column(name = "numero_manifesto", nullable = false)
+    @Column(name = "num_modal", nullable = false)
     private Integer numeroManifesto;
 
     /**

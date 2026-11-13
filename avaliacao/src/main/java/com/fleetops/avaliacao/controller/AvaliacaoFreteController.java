@@ -52,8 +52,11 @@ public class AvaliacaoFreteController {
                         @Content(array = @ArraySchema(schema = @Schema(implementation = AvaliacaoResponseDTO.class)))),
         @ApiResponse(responseCode = "500", description = "Erro interno ao consultar o banco de dados")
     })
-    public ResponseEntity<List<AvaliacaoResponseDTO>> listarTodos() {
-        return new ResponseEntity<List<AvaliacaoResponseDTO>>(this.service.listarAvaliacoes(), HttpStatus.OK);
+    public ResponseEntity<List<AvaliacaoResponseDTO>> listarTodos(@RequestParam(required = false) Long motoristaId) {
+        // Com ?motoristaId=X devolve só as avaliações desse motorista.
+        List<AvaliacaoResponseDTO> lista =
+                motoristaId != null ? this.service.listarPorMotorista(motoristaId) : this.service.listarAvaliacoes();
+        return new ResponseEntity<>(lista, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
@@ -69,7 +72,7 @@ public class AvaliacaoFreteController {
         @ApiResponse(responseCode = "500", description = "Erro interno ao consultar o banco de dados")
     })
     public ResponseEntity<AvaliacaoResponseDTO> buscarPorId(@PathVariable Long id) {
-        return new ResponseEntity<AvaliacaoResponseDTO>(this.service.buscarAvaliacao(id), HttpStatus.OK);
+        return new ResponseEntity<>(this.service.buscarAvaliacao(id), HttpStatus.OK);
     }
 
     @PostMapping
@@ -79,7 +82,7 @@ public class AvaliacaoFreteController {
                     """
                         Recebe nota (1 a 5), número do manifesto e feedback obrigatórios, vinculando-os ao motorista informado.
                         Escala: 1=Péssimo, 2=Ruim, 3=Regular, 4=Bom, 5=Excelente.
-                        A avaliação fica associada ao motorista e à data de registro para uso futuro no ranking.
+                        NÃO exige que o manifesto exista na base importada: o número é gravado em num_modal.
                         """)
     @ApiResponses({
         @ApiResponse(
@@ -92,7 +95,16 @@ public class AvaliacaoFreteController {
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     })
     public ResponseEntity<AvaliacaoResponseDTO> registrar(@Valid @RequestBody AvaliacaoRequestDTO request) {
-        AvaliacaoFrete avaliacao = service.verificacaAvaliacao(request);
+        // Monta e grava direto — sem consultar existência do manifesto
+        AvaliacaoFrete avaliacao = AvaliacaoFrete.builder()
+                .nota(request.getNota())
+                .numeroManifesto(request.getNumeroManifesto())
+                .feedback(
+                        request.getFeedback() == null
+                                ? ""
+                                : request.getFeedback().trim())
+                .motoristaId(request.getMotoristaId())
+                .build();
         AvaliacaoResponseDTO response = service.registrar(avaliacao);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
