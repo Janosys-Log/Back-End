@@ -56,4 +56,20 @@ public class ManifestoController {
         HashMap<Integer, RentabilidadeDTO> dadosDeAcordoComAsDatas = servico.RentabilidadeNoUltimosMeses(inicio, fim);
         return ResponseEntity.ok(dadosDeAcordoComAsDatas);
     }
+
+    @GetMapping("/rentabilidadeGrandeSp/{id}/{mes}/{ano}")
+    public ResponseEntity<RentabilidadeDTO> rentabilidadeMediaPorIdMotoristaGrandeSP(
+            @PathVariable Long id, @PathVariable Long mes, @PathVariable Long ano) {
+        RentabilidadeDTO rentabilidade = servico.RentabilidademanifestosPorMotoristaEAnoEMesGrandeSP(id, mes, ano);
+
+        return ResponseEntity.ok(rentabilidade);
+    }
+
+    @GetMapping("/rentabilidadeGeralGrandeSp/{inicio}/{fim}")
+    public ResponseEntity<HashMap<Integer, RentabilidadeDTO>> rentabilidadeGeralDaEmpresaGrandeSP(
+            @PathVariable LocalDate inicio, @PathVariable LocalDate fim) {
+        HashMap<Integer, RentabilidadeDTO> dadosDeAcordoComAsDatas =
+                servico.RentabilidadeNoUltimosMesesGrandeSp(inicio, fim);
+        return ResponseEntity.ok(dadosDeAcordoComAsDatas);
+    }
 }

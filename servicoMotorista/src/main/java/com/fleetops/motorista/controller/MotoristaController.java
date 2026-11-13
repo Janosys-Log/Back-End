@@ -53,4 +53,11 @@ public class MotoristaController {
 
         return ResponseEntity.ok(servico.rankingMotorista(inicio, fim));
     }
+
+    @GetMapping("/rankingPorDataGrandeSp/{inicio}/{fim}")
+    public ResponseEntity<List<MotoristaRendimentoDTO>> rankingMotoristaGrandeSP(
+            @PathVariable LocalDate inicio, @PathVariable LocalDate fim) {
+
+        return ResponseEntity.ok(servico.rankingMotoristaGrandeSp(inicio, fim));
+    }
 }

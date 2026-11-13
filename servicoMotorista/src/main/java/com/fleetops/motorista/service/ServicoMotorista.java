@@ -93,6 +93,9 @@ public class ServicoMotorista {
     }
 
     public List<MotoristaRendimentoDTO> rankingMotorista(LocalDate inicio, LocalDate fim) {
+        LocalDate mesAnterior = inicio.withDayOfMonth(1).minusMonths(1);
+        LocalDate mesAtual = inicio.withDayOfMonth(1);
+        LocalDate limiteMesAtual = fim.plusDays(1);
         List<MotoristaRendimentoDTO> listaMoto = motoristaRepo.rankingMotoristas(inicio, fim).stream()
                 .map(item -> new MotoristaRendimentoDTO(
                         MotoristaDTO.fromEntity(item.motorista()),
@@ -105,7 +108,39 @@ public class ServicoMotorista {
                                                 ? item.rendimento().ano().longValue()
                                                 : null,
                                         item.rendimento().rendimentoMedio(),
-                                        null, // Caso tenha o campo de crescimento, ajuste aqui
+                                        motoristaRepo.crescimentoRendaMedia(
+                                                item.motorista().getIdMotorista(),
+                                                mesAnterior,
+                                                mesAtual,
+                                                limiteMesAtual),
+                                        item.rendimento().numeroManifestos(),
+                                        item.rendimento().rendimentoTotal())
+                                : null))
+                .toList();
+        return listaMoto;
+    }
+
+    public List<MotoristaRendimentoDTO> rankingMotoristaGrandeSp(LocalDate inicio, LocalDate fim) {
+        LocalDate mesAnterior = inicio.withDayOfMonth(1).minusMonths(1);
+        LocalDate mesAtual = inicio.withDayOfMonth(1);
+        LocalDate limiteMesAtual = fim;
+        List<MotoristaRendimentoDTO> listaMoto = motoristaRepo.rankingMotoristasGrandeSp(inicio, fim).stream()
+                .map(item -> new MotoristaRendimentoDTO(
+                        MotoristaDTO.fromEntity(item.motorista()),
+                        item.rendimento() != null
+                                ? new RentabilidadeDTO(
+                                        item.rendimento().mes() != null
+                                                ? item.rendimento().mes().longValue()
+                                                : null,
+                                        item.rendimento().ano() != null
+                                                ? item.rendimento().ano().longValue()
+                                                : null,
+                                        item.rendimento().rendimentoMedio(),
+                                        motoristaRepo.crescimentoRendaMediaGrandeSP(
+                                                item.motorista().getIdMotorista(),
+                                                mesAnterior,
+                                                mesAtual,
+                                                limiteMesAtual),
                                         item.rendimento().numeroManifestos(),
                                         item.rendimento().rendimentoTotal())
                                 : null))

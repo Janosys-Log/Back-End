@@ -36,4 +36,31 @@ public interface ManifestoRepositorio extends JpaRepository<Manifesto, Long> {
       order by year(m.dataManifesto),month(m.dataManifesto)
       """)
     List<RendimentoMensal> RendimentoMedioPorMeses(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
+    @Query(
+            """
+      select new com.fleetops.motorista.domain.RendimentoMensal(
+      year(m.dataManifesto),
+      month(m.dataManifesto),
+      sum(m.valorRecebido)/count(m),
+      count(m),
+      sum(m.valorRecebido)
+      )
+       from Manifesto m
+      where m.dataManifesto between :inicio and :fim  and m.destino in ('Sao Paulo', 'Diadema', 'Guarulhos', 'Sao Caetano', 'Santo Andre', 'Sao Bernardo do Campo')
+      group by year(m.dataManifesto),month(m.dataManifesto)
+      order by year(m.dataManifesto),month(m.dataManifesto)
+      """)
+    List<RendimentoMensal> RendimentoMedioPorMesesGrandeSP(
+            @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
+    @Query(
+            """
+    from Manifesto m
+    where m.motorista.id = :motoristaId
+      and month(m.dataManifesto) = :mes
+      and year(m.dataManifesto) = :ano
+      and m.destino in ('Sao Paulo', 'Diadema', 'Guarulhos', 'Sao Caetano', 'Santo Andre', 'Sao Bernardo do Campo')
+    """)
+    List<Manifesto> buscarPorMotoristaEMesGrandeSP(Long motoristaId, Long mes, Long ano);
 }
