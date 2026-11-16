@@ -4,13 +4,19 @@ import com.fleetops.motorista.domain.Manifesto;
 import com.fleetops.motorista.domain.Motorista;
 import com.fleetops.motorista.domain.SubtipoVeiculo;
 import com.fleetops.motorista.domain.Veiculo;
+import com.fleetops.motorista.dto.ranking.DetalheMotoristaManifestosResponseDTO;
 import com.fleetops.motorista.dto.ranking.GraficoDestinoComparativoDTO;
 import com.fleetops.motorista.dto.ranking.GraficoFaixaItemDTO;
 import com.fleetops.motorista.dto.ranking.GraficoSubcategoriaItemDTO;
+import com.fleetops.motorista.dto.ranking.ManifestoItemDetalheDTO;
+import com.fleetops.motorista.dto.ranking.MotoristaNegativoItemDTO;
+import com.fleetops.motorista.dto.ranking.PaginaNegativosResponseDTO;
 import com.fleetops.motorista.dto.ranking.RankingMotoristaItemDTO;
 import com.fleetops.motorista.dto.ranking.RankingRentabilidadeResponseDTO;
+import com.fleetops.motorista.dto.ranking.ResumoNegativosDTO;
 import com.fleetops.motorista.dto.ranking.ResumoRankingDTO;
 import com.fleetops.motorista.dto.ranking.VisaoRanking;
+import com.fleetops.motorista.exceptions.MotoristaNaoEncontradoException;
 import com.fleetops.motorista.repository.ManifestoRepositorio;
 import com.fleetops.motorista.util.DestinoGrandeSpUtil;
 import java.math.BigDecimal;
@@ -495,6 +501,212 @@ public class RentabilidadeService {
 
         return new GraficoDestinoComparativoDTO(
                 mediaGeral, rmGrandeSp, grandeSp.size(), corGrandeSp, rmDemais, demais.size(), corDemais);
+    }
+
+    @Transactional(readOnly = true)
+    public PaginaNegativosResponseDTO obterPaginaNegativos(String mesParam, String visaoParam) {
+        List<String> mesesDisponiveis = listarMesesDisponiveis();
+        VisaoRanking visao = VisaoRanking.fromParam(visaoParam);
+        YearMonth mesSelecionado = resolverMesSelecionado(mesParam, mesesDisponiveis);
+        YearMonth mesAnterior = mesSelecionado.minusMonths(1);
+
+        List<Manifesto> manifestosMesGeral = manifestoRepositorio.buscarPorPeriodoComMotoristaEVeiculo(
+                mesSelecionado.atDay(1), mesSelecionado.atEndOfMonth());
+        List<Manifesto> manifestosMesAnteriorGeral = manifestoRepositorio.buscarPorPeriodoComMotoristaEVeiculo(
+                mesAnterior.atDay(1), mesAnterior.atEndOfMonth());
+
+        boolean possuiDadosMesAnteriorSistema = !manifestosMesAnteriorGeral.isEmpty();
+
+        List<Manifesto> manifestosMesVisao = filtrarPorVisao(manifestosMesGeral, visao);
+        List<Manifesto> manifestosMesAnteriorVisao = filtrarPorVisao(manifestosMesAnteriorGeral, visao);
+
+        boolean possuiDadosMes = !manifestosMesVisao.isEmpty();
+
+        Map<Long, AgregadoMotoristaInterno> mapaMesAtual = agruparPorMotorista(manifestosMesVisao);
+        Map<Long, AgregadoMotoristaInterno> mapaMesAnterior = agruparPorMotorista(manifestosMesAnteriorVisao);
+
+        // Agrupamento de manifestos por motorista para contar manifestos com RT negativa
+        Map<Long, Integer> manifestosNegativosPorMotorista = new HashMap<>();
+        for (Manifesto m : manifestosMesVisao) {
+            if (m.getMotorista() != null && m.getMotorista().getIdMotorista() != null) {
+                BigDecimal rt = calcularRtManifesto(m);
+                if (rt.compareTo(BigDecimal.ZERO) < 0) {
+                    manifestosNegativosPorMotorista.merge(m.getMotorista().getIdMotorista(), 1, Integer::sum);
+                }
+            }
+        }
+
+        List<AgregadoMotoristaInterno> ordenadosGeral = new ArrayList<>(mapaMesAtual.values());
+        ordenadosGeral.sort(comparadorOficialRanking());
+
+        int totalMotoristasFrota = ordenadosGeral.size();
+        List<MotoristaNegativoItemDTO> motoristasNegativos = new ArrayList<>();
+        BigDecimal rtTotalNegativos = BigDecimal.ZERO;
+
+        for (int i = 0; i < totalMotoristasFrota; i++) {
+            AgregadoMotoristaInterno ag = ordenadosGeral.get(i);
+            int posicaoOficial = i + 1;
+
+            if (ag.rentabilidadeMedia.compareTo(BigDecimal.ZERO) < 0) {
+                BigDecimal variacaoMotorista = null;
+                String statusVariacao;
+                if (!possuiDadosMesAnteriorSistema) {
+                    statusVariacao = "SEM_MES_ANTERIOR";
+                } else {
+                    AgregadoMotoristaInterno ant = mapaMesAnterior.get(ag.motorista.getIdMotorista());
+                    if (ant == null) {
+                        statusVariacao = "NOVO";
+                    } else {
+                        variacaoMotorista = ag.rentabilidadeMedia
+                                .subtract(ant.rentabilidadeMedia)
+                                .setScale(2, RoundingMode.HALF_UP);
+                        int cmp = variacaoMotorista.compareTo(BigDecimal.ZERO);
+                        statusVariacao = cmp > 0 ? "AUMENTO" : (cmp < 0 ? "QUEDA" : "IGUAL");
+                    }
+                }
+
+                int qtdNeg = manifestosNegativosPorMotorista.getOrDefault(ag.motorista.getIdMotorista(), 0);
+                String fracaoNegativos = qtdNeg + " de " + ag.numeroManifestos;
+                String posicaoFormatada = posicaoOficial + "º";
+
+                rtTotalNegativos = rtTotalNegativos.add(ag.rentabilidadeTotal);
+
+                motoristasNegativos.add(new MotoristaNegativoItemDTO(
+                        posicaoOficial,
+                        posicaoFormatada,
+                        ag.motorista.getIdMotorista(),
+                        ag.motorista.getNomeMotorista(),
+                        ag.motorista.getCpfMotorista(),
+                        ag.tipoVeiculo,
+                        ag.subtipoVeiculo,
+                        ag.subtipoLabel,
+                        ag.rentabilidadeMedia,
+                        variacaoMotorista,
+                        statusVariacao,
+                        ag.numeroManifestos,
+                        qtdNeg,
+                        fracaoNegativos,
+                        ag.rentabilidadeTotal));
+            }
+        }
+
+        // Ordenação da tabela da US.15: Pior RM primeiro (mais negativo ao menos negativo)
+        motoristasNegativos.sort((a, b) -> {
+            int cmpRm = a.rentabilidadeMedia().compareTo(b.rentabilidadeMedia());
+            if (cmpRm != 0) {
+                return cmpRm; // Menor (mais negativo) vem primeiro
+            }
+            return Integer.compare(b.posicao(), a.posicao());
+        });
+
+        int qtdNegativos = motoristasNegativos.size();
+        BigDecimal percentualNegativos = BigDecimal.ZERO;
+        if (totalMotoristasFrota > 0) {
+            percentualNegativos = BigDecimal.valueOf(qtdNegativos)
+                    .multiply(BigDecimal.valueOf(100))
+                    .divide(BigDecimal.valueOf(totalMotoristasFrota), 1, RoundingMode.HALF_UP);
+        }
+
+        ResumoNegativosDTO resumo = new ResumoNegativosDTO(
+                mesSelecionado.toString(),
+                mesAnterior.toString(),
+                visao,
+                qtdNegativos,
+                totalMotoristasFrota,
+                percentualNegativos,
+                rtTotalNegativos.setScale(2, RoundingMode.HALF_UP),
+                possuiDadosMes);
+
+        return new PaginaNegativosResponseDTO(resumo, motoristasNegativos, mesesDisponiveis);
+    }
+
+    @Transactional(readOnly = true)
+    public DetalheMotoristaManifestosResponseDTO obterManifestosMotoristaNegativo(
+            Long motoristaId, String mesParam, String visaoParam) {
+        List<String> mesesDisponiveis = listarMesesDisponiveis();
+        VisaoRanking visao = VisaoRanking.fromParam(visaoParam);
+        YearMonth mesSelecionado = resolverMesSelecionado(mesParam, mesesDisponiveis);
+
+        List<Manifesto> manifestosMesGeral = manifestoRepositorio.buscarPorPeriodoComMotoristaEVeiculo(
+                mesSelecionado.atDay(1), mesSelecionado.atEndOfMonth());
+        List<Manifesto> manifestosMesVisao = filtrarPorVisao(manifestosMesGeral, visao);
+
+        Map<Long, AgregadoMotoristaInterno> mapaMesAtual = agruparPorMotorista(manifestosMesVisao);
+        AgregadoMotoristaInterno agregadoMotorista = mapaMesAtual.get(motoristaId);
+
+        if (agregadoMotorista == null) {
+            throw new MotoristaNaoEncontradoException(motoristaId);
+        }
+
+        List<AgregadoMotoristaInterno> ordenadosGeral = new ArrayList<>(mapaMesAtual.values());
+        ordenadosGeral.sort(comparadorOficialRanking());
+
+        int posicaoOficial = 0;
+        for (int i = 0; i < ordenadosGeral.size(); i++) {
+            if (ordenadosGeral.get(i).motorista.getIdMotorista().equals(motoristaId)) {
+                posicaoOficial = i + 1;
+                break;
+            }
+        }
+
+        List<Manifesto> manifestosDoMotorista = manifestosMesVisao.stream()
+                .filter(m -> m.getMotorista() != null
+                        && motoristaId.equals(m.getMotorista().getIdMotorista()))
+                .toList();
+
+        List<ManifestoItemDetalheDTO> itensManifestos = new ArrayList<>();
+        int manifestosNegativosCount = 0;
+
+        for (Manifesto m : manifestosDoMotorista) {
+            BigDecimal vf = m.getFreteEmpresa() != null ? m.getFreteEmpresa() : BigDecimal.ZERO;
+            BigDecimal co = m.getFreteAgregado() != null ? m.getFreteAgregado() : BigDecimal.ZERO;
+            BigDecimal rt = vf.subtract(co).setScale(2, RoundingMode.HALF_UP);
+
+            if (rt.compareTo(BigDecimal.ZERO) < 0) {
+                manifestosNegativosCount++;
+            }
+
+            String dataFormatada =
+                    m.getDataManifesto() != null ? m.getDataManifesto().toString() : "—";
+            String numeroManifesto = m.getIdManifesto() != null ? String.valueOf(m.getIdManifesto()) : "—";
+
+            itensManifestos.add(new ManifestoItemDetalheDTO(
+                    m.getIdManifesto(),
+                    numeroManifesto,
+                    dataFormatada,
+                    m.getDestino() != null ? m.getDestino() : "Não informado",
+                    vf.setScale(2, RoundingMode.HALF_UP),
+                    co.setScale(2, RoundingMode.HALF_UP),
+                    rt));
+        }
+
+        // Ordenar manifestos pelo pior RT primeiro (menor valor/mais negativo ao maior)
+        itensManifestos.sort((a, b) -> {
+            int cmp = a.rtManifesto().compareTo(b.rtManifesto());
+            if (cmp != 0) {
+                return cmp;
+            }
+            return Long.compare(
+                    b.idManifesto() != null ? b.idManifesto() : 0L, a.idManifesto() != null ? a.idManifesto() : 0L);
+        });
+
+        String fracaoNegativos = manifestosNegativosCount + " de " + agregadoMotorista.numeroManifestos;
+        String posicaoFormatada = posicaoOficial > 0 ? posicaoOficial + "º" : "—";
+
+        return new DetalheMotoristaManifestosResponseDTO(
+                motoristaId,
+                agregadoMotorista.motorista.getNomeMotorista(),
+                agregadoMotorista.subtipoLabel,
+                mesSelecionado.toString(),
+                visao,
+                posicaoOficial,
+                posicaoFormatada,
+                agregadoMotorista.rentabilidadeMedia,
+                agregadoMotorista.rentabilidadeTotal,
+                agregadoMotorista.numeroManifestos,
+                manifestosNegativosCount,
+                fracaoNegativos,
+                itensManifestos);
     }
 
     private record AgregadoMotoristaInterno(

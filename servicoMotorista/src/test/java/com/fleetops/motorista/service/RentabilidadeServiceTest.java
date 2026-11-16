@@ -12,9 +12,12 @@ import com.fleetops.motorista.domain.Motorista;
 import com.fleetops.motorista.domain.SubtipoVeiculo;
 import com.fleetops.motorista.domain.TipoVeiculo;
 import com.fleetops.motorista.domain.Veiculo;
+import com.fleetops.motorista.dto.ranking.DetalheMotoristaManifestosResponseDTO;
 import com.fleetops.motorista.dto.ranking.GraficoDestinoComparativoDTO;
 import com.fleetops.motorista.dto.ranking.GraficoFaixaItemDTO;
 import com.fleetops.motorista.dto.ranking.GraficoSubcategoriaItemDTO;
+import com.fleetops.motorista.dto.ranking.MotoristaNegativoItemDTO;
+import com.fleetops.motorista.dto.ranking.PaginaNegativosResponseDTO;
 import com.fleetops.motorista.dto.ranking.RankingMotoristaItemDTO;
 import com.fleetops.motorista.dto.ranking.RankingRentabilidadeResponseDTO;
 import com.fleetops.motorista.repository.ManifestoRepositorio;
@@ -265,6 +268,149 @@ class RentabilidadeServiceTest {
         assertEquals(1, dest.manifestosGrandeSp());
         assertEquals(new BigDecimal("600.00"), dest.rentabilidadeMediaDemaisDestinos());
         assertEquals(1, dest.manifestosDemaisDestinos());
+    }
+
+    @Test
+    @DisplayName("US.15 - Listagem de motoristas negativos ordenada do pior para o melhor RM com fração de negativos")
+    void deveListarMotoristasNegativosOrdenadosDoPiorParaOMelhor() {
+        Veiculo vuc = criarVeiculo(1L, TipoVeiculo.URBANOS_DE_CARGA, SubtipoVeiculo.VUC);
+        Veiculo fiorino = criarVeiculo(2L, TipoVeiculo.URBANOS_EXPRESS, SubtipoVeiculo.FIORINO);
+        Veiculo truck = criarVeiculo(3L, TipoVeiculo.PESADOS, SubtipoVeiculo.TRUCK);
+
+        Motorista motPositivo = criarMotorista(1L, "Marcos Positivo", "111", truck);
+        Motorista motPior = criarMotorista(2L, "Jose Pior", "222", fiorino); // RM = -520
+        Motorista motIntermediario = criarMotorista(3L, "Paulo Intermediario", "333", vuc); // RM = -310
+
+        // motPositivo: RM = +1000
+        Manifesto mPos = criarManifesto(
+                10L,
+                LocalDate.of(2026, 9, 5),
+                "SAO PAULO",
+                new BigDecimal("2000.00"),
+                new BigDecimal("1000.00"),
+                motPositivo,
+                truck);
+
+        // motPior: 2 manifestos (1 negativo -1040, 1 zero = soma -1040 / 2 = -520)
+        Manifesto mPior1 = criarManifesto(
+                20L,
+                LocalDate.of(2026, 9, 6),
+                "SAO PAULO",
+                new BigDecimal("1000.00"),
+                new BigDecimal("2040.00"),
+                motPior,
+                fiorino); // RT = -1040
+        Manifesto mPior2 = criarManifesto(
+                21L,
+                LocalDate.of(2026, 9, 7),
+                "SAO PAULO",
+                new BigDecimal("1000.00"),
+                new BigDecimal("1000.00"),
+                motPior,
+                fiorino); // RT = 0
+
+        // motIntermediario: 3 manifestos (2 negativos: -400 e -220, soma -620 / 2 = -310)
+        Manifesto mInt1 = criarManifesto(
+                30L,
+                LocalDate.of(2026, 9, 8),
+                "SAO PAULO",
+                new BigDecimal("1000.00"),
+                new BigDecimal("1400.00"),
+                motIntermediario,
+                vuc); // RT = -400
+        Manifesto mInt2 = criarManifesto(
+                31L,
+                LocalDate.of(2026, 9, 9),
+                "SAO PAULO",
+                new BigDecimal("1000.00"),
+                new BigDecimal("1220.00"),
+                motIntermediario,
+                vuc); // RT = -220
+
+        when(manifestoRepositorio.listarDatasManifestosOrdenadasDesc()).thenReturn(List.of(LocalDate.of(2026, 9, 9)));
+        when(manifestoRepositorio.buscarPorPeriodoComMotoristaEVeiculo(
+                        LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 30)))
+                .thenReturn(List.of(mPos, mPior1, mPior2, mInt1, mInt2));
+        when(manifestoRepositorio.buscarPorPeriodoComMotoristaEVeiculo(
+                        LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31)))
+                .thenReturn(List.of());
+
+        PaginaNegativosResponseDTO resp = rentabilidadeService.obterPaginaNegativos("2026-09", "GERAL");
+
+        assertEquals(2, resp.resumo().quantidadeMotoristasNegativos());
+        assertEquals(3, resp.resumo().totalMotoristasFrota());
+        assertEquals(new BigDecimal("66.7"), resp.resumo().percentualNegativos());
+
+        // Deve vir ordenado do pior (-520,00) para o intermediário (-310,00)
+        List<MotoristaNegativoItemDTO> motoristas = resp.motoristas();
+        assertEquals(2, motoristas.size());
+
+        MotoristaNegativoItemDTO item1 = motoristas.get(0);
+        assertEquals("Jose Pior", item1.nomeMotorista());
+        assertEquals(new BigDecimal("-520.00"), item1.rentabilidadeMedia());
+        assertEquals("1 de 2", item1.fracaoManifestosNegativos());
+
+        MotoristaNegativoItemDTO item2 = motoristas.get(1);
+        assertEquals("Paulo Intermediario", item2.nomeMotorista());
+        assertEquals(new BigDecimal("-310.00"), item2.rentabilidadeMedia());
+        assertEquals("2 de 2", item2.fracaoManifestosNegativos());
+    }
+
+    @Test
+    @DisplayName("US.15 - Detalhe dos manifestos do motorista ordenados por pior RT primeiro")
+    void deveListarManifestosDoMotoristaNegativoOrdenadosPorPiorRtPrimeiro() {
+        Veiculo vuc = criarVeiculo(1L, TipoVeiculo.URBANOS_DE_CARGA, SubtipoVeiculo.VUC);
+        Motorista mot = criarMotorista(10L, "Carlos Silva", "111", vuc);
+
+        // Manifesto 1: RT = -980.00 (pior)
+        Manifesto m1 = criarManifesto(
+                101L,
+                LocalDate.of(2026, 9, 11),
+                "Santos",
+                new BigDecimal("2400.00"),
+                new BigDecimal("3380.00"),
+                mot,
+                vuc);
+        // Manifesto 2: RT = -100.00 (segundo pior)
+        Manifesto m2 = criarManifesto(
+                102L,
+                LocalDate.of(2026, 9, 22),
+                "Guarulhos",
+                new BigDecimal("1200.00"),
+                new BigDecimal("1300.00"),
+                mot,
+                vuc);
+        // Manifesto 3: RT = +150.00 (positivo)
+        Manifesto m3 = criarManifesto(
+                103L,
+                LocalDate.of(2026, 9, 3),
+                "Campinas",
+                new BigDecimal("1850.00"),
+                new BigDecimal("1700.00"),
+                mot,
+                vuc);
+
+        when(manifestoRepositorio.listarDatasManifestosOrdenadasDesc()).thenReturn(List.of(LocalDate.of(2026, 9, 22)));
+        when(manifestoRepositorio.buscarPorPeriodoComMotoristaEVeiculo(
+                        LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 30)))
+                .thenReturn(List.of(m3, m1, m2));
+
+        DetalheMotoristaManifestosResponseDTO resp =
+                rentabilidadeService.obterManifestosMotoristaNegativo(10L, "2026-09", "GERAL");
+
+        assertEquals("Carlos Silva", resp.nomeMotorista());
+        assertEquals(3, resp.totalManifestos());
+        assertEquals(2, resp.manifestosNegativos());
+        assertEquals("2 de 3", resp.fracaoManifestosNegativos());
+
+        // Manifestos devem estar na ordem: -980.00 -> -100.00 -> +150.00
+        assertEquals(3, resp.manifestos().size());
+        assertEquals(new BigDecimal("-980.00"), resp.manifestos().get(0).rtManifesto());
+        assertEquals("Santos", resp.manifestos().get(0).destino());
+        assertEquals(new BigDecimal("-100.00"), resp.manifestos().get(1).rtManifesto());
+        assertEquals("Guarulhos", resp.manifestos().get(1).destino());
+        assertEquals(new BigDecimal("150.00"), resp.manifestos().get(2).rtManifesto());
+        assertEquals("Campinas", resp.manifestos().get(2).destino());
     }
 
     private Veiculo criarVeiculo(Long id, TipoVeiculo tipo, SubtipoVeiculo subtipo) {
