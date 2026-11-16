@@ -12,6 +12,18 @@ import org.springframework.data.repository.query.Param;
 public interface ManifestoRepositorio extends JpaRepository<Manifesto, Long> {
     Optional<Manifesto> findFirstByOrderByDataInsertDesc();
 
+    @Query("SELECT m FROM Manifesto m "
+            + "JOIN FETCH m.motorista "
+            + "JOIN FETCH m.veiculo "
+            + "WHERE m.dataManifesto BETWEEN :inicio AND :fim")
+    List<Manifesto> buscarPorPeriodoComMotoristaEVeiculo(
+            @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
+    @Query("SELECT DISTINCT m.dataManifesto FROM Manifesto m "
+            + "WHERE m.dataManifesto IS NOT NULL "
+            + "ORDER BY m.dataManifesto DESC")
+    List<LocalDate> listarDatasManifestosOrdenadasDesc();
+
     @Query(
             """
     from Manifesto m
