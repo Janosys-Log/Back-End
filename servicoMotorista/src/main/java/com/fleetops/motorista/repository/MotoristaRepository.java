@@ -67,19 +67,19 @@ public interface MotoristaRepository extends JpaRepository<Motorista, Long> {
     SELECT (
         ((SELECT AVG(m.valorRecebido) FROM Manifesto m
           WHERE m.dataManifesto >= :mesAtual AND m.dataManifesto < :limiteMesAtual
-            AND m.motorista.id = :id)
+            AND m.motorista.idMotorista = :id)
          -
          (SELECT AVG(m2.valorRecebido) FROM Manifesto m2
           WHERE m2.dataManifesto >= :mesAnterior AND m2.dataManifesto < :mesAtual
-            AND m2.motorista.id = :id))
+            AND m2.motorista.idMotorista = :id))
         * 100.0
         /
-        (SELECT AVG(m3.valorRecebido) FROM Manifesto m3
+        NULLIF((SELECT AVG(m3.valorRecebido) FROM Manifesto m3
          WHERE m3.dataManifesto >= :mesAnterior AND m3.dataManifesto < :mesAtual
-           AND m3.motorista.id = :id)
+           AND m3.motorista.idMotorista = :id), 0)
     )
     FROM Motorista mot
-    WHERE mot.id = :id
+    WHERE mot.idMotorista = :id
 """)
     BigDecimal crescimentoRendaMedia(
             @Param("id") Long id,

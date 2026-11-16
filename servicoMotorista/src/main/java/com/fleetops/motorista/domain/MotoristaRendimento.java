@@ -12,8 +12,8 @@ public record MotoristaRendimento(Motorista motorista, RendimentoMensal rendimen
                 new RendimentoMensal(
                         ano,
                         mes,
-                        BigDecimal.valueOf(media).setScale(2, RoundingMode.HALF_UP),
-                        numeroManifestos,
-                        total));
+                        media != null ? BigDecimal.valueOf(media).setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO,
+                        numeroManifestos != null ? numeroManifestos : 0L,
+                        total != null ? total : BigDecimal.ZERO));
     }
 }

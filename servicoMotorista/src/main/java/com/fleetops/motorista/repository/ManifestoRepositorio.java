@@ -27,7 +27,7 @@ public interface ManifestoRepositorio extends JpaRepository<Manifesto, Long> {
     @Query(
             """
     from Manifesto m
-    where m.motorista.id = :motoristaId
+    where m.motorista.idMotorista = :motoristaId
       and month(m.dataManifesto) = :mes
       and year(m.dataManifesto) = :ano
     """)
@@ -69,7 +69,7 @@ public interface ManifestoRepositorio extends JpaRepository<Manifesto, Long> {
     @Query(
             """
     from Manifesto m
-    where m.motorista.id = :motoristaId
+    where m.motorista.idMotorista = :motoristaId
       and month(m.dataManifesto) = :mes
       and year(m.dataManifesto) = :ano
       and m.destino in ('Sao Paulo', 'Diadema', 'Guarulhos', 'Sao Caetano', 'Santo Andre', 'Sao Bernardo do Campo')
