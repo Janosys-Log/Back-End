@@ -40,13 +40,7 @@ public class StatusMotoristasService {
     private void validarFluxo(Motorista motorista, StatusMotorista novoStatus) {
         StatusMotorista atual = motorista.getStatus();
 
-        // Já disponível e tenta marcar disponível de novo
-        if (atual == StatusMotorista.Disponivel && novoStatus == StatusMotorista.Disponivel) {
-            throw new FluxoStatusNaoEsperadoException(novoStatus);
-        }
-
-        // Em rota: só pode concluir (ir para Disponível). Indisponível/Indesejado bloqueados.
-        if (atual == StatusMotorista.Em_Rota && novoStatus != StatusMotorista.Disponivel) {
+        if (atual == novoStatus) {
             throw new FluxoStatusNaoEsperadoException(novoStatus);
         }
     }
