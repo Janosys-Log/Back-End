@@ -60,8 +60,13 @@ public class ServicoManifesto {
         manifestoParaSalvar.setAgregado(servAgregado.pegarPorCnpj(manifesto.getCnpjagregado()));
         manifestoParaSalvar.setDataManifesto(LocalDate.parse(manifesto.getData(), FMT));
         manifestoParaSalvar.setDestino(manifesto.getDestino());
-        manifestoParaSalvar.setFreteAgregado(manifesto.getValorfreteagregado());
-        manifestoParaSalvar.setFreteEmpresa(manifesto.getValorfreteempresa());
+        BigDecimal freteEmpresa =
+                manifesto.getValorfreteempresa() != null ? manifesto.getValorfreteempresa() : BigDecimal.ZERO;
+        BigDecimal freteAgregado =
+                manifesto.getValorfreteagregado() != null ? manifesto.getValorfreteagregado() : BigDecimal.ZERO;
+        manifestoParaSalvar.setFreteAgregado(freteAgregado);
+        manifestoParaSalvar.setFreteEmpresa(freteEmpresa);
+        manifestoParaSalvar.setValorRecebido(freteEmpresa.subtract(freteAgregado));
         manifestoParaSalvar.setIdManifesto(manifesto.getManifestoid());
         manifestoParaSalvar.setMotorista(servicoMotorista.pegarPorCPF(manifesto.getCpfmotorista()));
         manifestoParaSalvar.setObservacoes(manifesto.getObservacoes());
