@@ -37,8 +37,7 @@ public class Motorista {
     private Long idMotorista;
 
     @NotBlank(message = "O nome do motorista é obrigatório")
-    @Size(max = 100, message = "O nome do motorista deve ter no máximo 100 caracteres")
-    @Column(name = "nome_motorista", length = 100, nullable = false)
+    @Column(name = "nome_motorista", columnDefinition = "TEXT")
     private String nomeMotorista;
 
     @NotBlank(message = "O CPF do motorista é obrigatório")
