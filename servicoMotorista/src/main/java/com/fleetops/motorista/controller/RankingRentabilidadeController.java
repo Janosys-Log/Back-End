@@ -1,5 +1,7 @@
 package com.fleetops.motorista.controller;
 
+import com.fleetops.motorista.dto.ranking.DetalheMotoristaManifestosResponseDTO;
+import com.fleetops.motorista.dto.ranking.PaginaNegativosResponseDTO;
 import com.fleetops.motorista.dto.ranking.RankingRentabilidadeResponseDTO;
 import com.fleetops.motorista.service.RentabilidadeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('GERENCIA')")
 @Tag(
         name = "Ranking de Rentabilidade",
-        description = "Endpoints para consulta do Ranking de Rentabilidade de motoristas (US.14)")
+        description = "Endpoints para consulta do Ranking de Rentabilidade e Negativos (US.14 e US.15)")
 public class RankingRentabilidadeController {
 
     private final RentabilidadeService rentabilidadeService;
@@ -48,5 +51,36 @@ public class RankingRentabilidadeController {
                     @RequestParam(required = false, defaultValue = "GERAL")
                     String visao) {
         return ResponseEntity.ok(rentabilidadeService.obterRankingModal(mes, visao));
+    }
+
+    @GetMapping("/rentabilidade/negativos")
+    @Operation(
+            summary = "Obtém os dados da Página de Motoristas com Rentabilidade Média Negativa (US.15)",
+            description =
+                    "Retorna a lista de motoristas com RM negativa ordenada do pior para o melhor e o resumo consolidado.")
+    public ResponseEntity<PaginaNegativosResponseDTO> obterPaginaNegativos(
+            @Parameter(description = "Mês de referência no formato YYYY-MM (padrão: mês mais recente)")
+                    @RequestParam(required = false)
+                    String mes,
+            @Parameter(description = "Visão de análise: GERAL ou GRANDE_SP (padrão: GERAL)")
+                    @RequestParam(required = false, defaultValue = "GERAL")
+                    String visao) {
+        return ResponseEntity.ok(rentabilidadeService.obterPaginaNegativos(mes, visao));
+    }
+
+    @GetMapping("/rentabilidade/negativos/{motoristaId}/manifestos")
+    @Operation(
+            summary = "Obtém os manifestos de um motorista específico ordenados pelo pior RT primeiro (US.15)",
+            description =
+                    "Retorna o cabeçalho com indicadores do motorista e todos os manifestos do mês ordenados do menor para o maior RT.")
+    public ResponseEntity<DetalheMotoristaManifestosResponseDTO> obterManifestosMotoristaNegativo(
+            @Parameter(description = "ID do motorista") @PathVariable Long motoristaId,
+            @Parameter(description = "Mês de referência no formato YYYY-MM (padrão: mês mais recente)")
+                    @RequestParam(required = false)
+                    String mes,
+            @Parameter(description = "Visão de análise: GERAL ou GRANDE_SP (padrão: GERAL)")
+                    @RequestParam(required = false, defaultValue = "GERAL")
+                    String visao) {
+        return ResponseEntity.ok(rentabilidadeService.obterManifestosMotoristaNegativo(motoristaId, mes, visao));
     }
 }
