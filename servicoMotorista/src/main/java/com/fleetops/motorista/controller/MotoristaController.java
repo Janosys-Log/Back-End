@@ -1,12 +1,15 @@
 package com.fleetops.motorista.controller;
 
+import com.fleetops.motorista.domain.Motorista;
 import com.fleetops.motorista.domain.StatusMotorista;
 import com.fleetops.motorista.dto.MotoristaDTO;
+import com.fleetops.motorista.dto.MotoristaOperacionalDTO;
 import com.fleetops.motorista.dto.MotoristaRendimentoDTO;
 import com.fleetops.motorista.service.ServicoMotorista;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,28 +26,41 @@ public class MotoristaController {
     private ServicoMotorista servico;
 
     @GetMapping
-    public ResponseEntity<List<MotoristaDTO>> listar(
+    public ResponseEntity<List<?>> listar(
             @RequestParam(required = false) StatusMotorista status,
-            @RequestParam(required = false) List<Long> veiculoIds) {
-        List<MotoristaDTO> resultado = servico.listar(status, veiculoIds).stream()
-                .map(MotoristaDTO::fromEntity)
+            @RequestParam(required = false) List<Long> veiculoIds,
+            Authentication authentication) {
+        boolean gerencia = ehGerencia(authentication);
+        List<?> resultado = servico.listar(status, veiculoIds).stream()
+                .map(motorista -> paraPerfil(motorista, gerencia))
                 .toList();
         return ResponseEntity.ok(resultado);
     }
 
     @GetMapping("/disponiveis")
-    public List<MotoristaDTO> listarDisponiveis() {
+    public List<?> listarDisponiveis(Authentication authentication) {
+        boolean gerencia = ehGerencia(authentication);
         return servico.listarDisponiveis().stream()
-                .map(MotoristaDTO::fromEntity)
+                .map(motorista -> paraPerfil(motorista, gerencia))
                 .toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MotoristaDTO> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<?> buscarPorId(@PathVariable Long id, Authentication authentication) {
+        boolean gerencia = ehGerencia(authentication);
         return servico.buscarPorId(id)
-                .map(MotoristaDTO::fromEntity)
+                .map(motorista -> paraPerfil(motorista, gerencia))
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    private static Object paraPerfil(Motorista motorista, boolean gerencia) {
+        return gerencia ? MotoristaDTO.fromEntity(motorista) : MotoristaOperacionalDTO.fromEntity(motorista);
+    }
+
+    private static boolean ehGerencia(Authentication authentication) {
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_GERENCIA".equals(authority.getAuthority()));
     }
 
     @GetMapping("/rankingPorData/{inicio}/{fim}")
