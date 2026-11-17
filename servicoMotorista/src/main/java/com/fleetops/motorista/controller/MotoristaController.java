@@ -9,8 +9,9 @@ import com.fleetops.motorista.service.ServicoMotorista;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -64,6 +65,7 @@ public class MotoristaController {
     }
 
     @GetMapping("/rankingPorData/{inicio}/{fim}")
+    @PreAuthorize("hasRole('GERENCIA')")
     public ResponseEntity<List<MotoristaRendimentoDTO>> rankingMotorista(
             @PathVariable LocalDate inicio, @PathVariable LocalDate fim) {
 
@@ -71,6 +73,7 @@ public class MotoristaController {
     }
 
     @GetMapping("/rankingPorDataGrandeSp/{inicio}/{fim}")
+    @PreAuthorize("hasRole('GERENCIA')")
     public ResponseEntity<List<MotoristaRendimentoDTO>> rankingMotoristaGrandeSP(
             @PathVariable LocalDate inicio, @PathVariable LocalDate fim) {
 
