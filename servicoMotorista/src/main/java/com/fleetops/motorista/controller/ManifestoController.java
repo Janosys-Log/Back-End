@@ -1,18 +1,24 @@
 package com.fleetops.motorista.controller;
 
+import com.fleetops.motorista.dto.CardsCustoDTO;
 import com.fleetops.motorista.dto.ManifestoDTO;
 import com.fleetops.motorista.dto.RentabilidadeDTO;
 import com.fleetops.motorista.dto.ResponseDate;
+import com.fleetops.motorista.service.CardsCustoService;
 import com.fleetops.motorista.service.ServicoManifesto;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -21,6 +27,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class ManifestoController {
     @Autowired
     private ServicoManifesto servico;
+
+    @Autowired
+    private CardsCustoService cardsCustoService;
 
     @GetMapping
     public List<ManifestoDTO> listarTodos() {
@@ -63,6 +72,18 @@ public class ManifestoController {
         RentabilidadeDTO rentabilidade = servico.RentabilidademanifestosPorMotoristaEAnoEMesGrandeSP(id, mes, ano);
 
         return ResponseEntity.ok(rentabilidade);
+    }
+
+    @GetMapping("/dashboard/cards-custo")
+    @PreAuthorize("hasRole('GERENCIA')")
+    public ResponseEntity<CardsCustoDTO> cardsCusto(@RequestParam(required = false) String mes) {
+        YearMonth ym;
+        try {
+            ym = mes != null ? YearMonth.parse(mes) : null;
+        } catch (DateTimeParseException e) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(cardsCustoService.calcular(ym));
     }
 
     @GetMapping("/rentabilidadeGeralGrandeSp/{inicio}/{fim}")
