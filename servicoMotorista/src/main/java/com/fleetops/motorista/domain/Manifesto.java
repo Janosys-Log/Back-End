@@ -61,7 +61,7 @@ public class Manifesto {
     @Column(name = "freteAgregado", precision = 12, scale = 2)
     private BigDecimal freteAgregado;
 
-    @Column(name = "observacoes", columnDefinition = "TEXT")
+    @Column(name = "observacoes", columnDefinition = "LONGTEXT")
     private String observacoes;
 
     @ManyToOne(fetch = FetchType.EAGER)
