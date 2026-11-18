@@ -1,16 +1,21 @@
-FROM maven:3.9-eclipse-temurin-21-alpine as buildador
+FROM maven:3.9-eclipse-temurin-21-alpine AS buildador
 
-WORKDIR build/
+WORKDIR /build
 
-COPY . . 
+COPY pom.xml .
+COPY avaliacao/pom.xml avaliacao/pom.xml
+COPY CsvParaJson/pom.xml CsvParaJson/pom.xml
+COPY servicoMotorista/pom.xml servicoMotorista/pom.xml
+COPY usuario/pom.xml usuario/pom.xml
 
-RUN mvn clean package -DskipTests -pl CsvParaJson
+COPY CsvParaJson/src CsvParaJson/src
 
-FROM  eclipse-temurin:21-jre-alpine
+RUN --mount=type=cache,target=/root/.m2 mvn package -DskipTests -Dspotless.apply.skip=true -pl CsvParaJson
 
-WORKDIR appCsvParaJson/
+FROM eclipse-temurin:21-jre-alpine
+
+WORKDIR /appCsvParaJson
 
 COPY --from=buildador /build/CsvParaJson/target/*.jar CsvParaJson.jar
 
 CMD ["java", "-jar", "CsvParaJson.jar"]
-
