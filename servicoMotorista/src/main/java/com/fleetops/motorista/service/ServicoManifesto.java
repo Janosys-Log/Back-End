@@ -5,8 +5,6 @@ import com.fleetops.motorista.domain.Manifesto;
 import com.fleetops.motorista.domain.Motorista;
 import com.fleetops.motorista.domain.RendimentoMensal;
 import com.fleetops.motorista.domain.Veiculo;
-import com.fleetops.motorista.dto.DashboardOperacionalDTO;
-import com.fleetops.motorista.dto.ManifestoDestaqueDTO;
 import com.fleetops.motorista.dto.RentabilidadeDTO;
 import com.fleetops.motorista.dto.ResponseDate;
 import com.fleetops.motorista.ouvinte.dto.response.ManifestoDTO;
@@ -18,7 +16,6 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -396,117 +393,5 @@ public class ServicoManifesto {
             anterior = rendimento.rendimentoMedio();
         }
         return map;
-    }
-
-    @Transactional(readOnly = true)
-    public DashboardOperacionalDTO obterDashboardOperacional(String mesParam) {
-        YearMonth mesSelecionado;
-        if (mesParam != null && !mesParam.isBlank()) {
-            try {
-                mesSelecionado = YearMonth.parse(mesParam.trim());
-            } catch (Exception e) {
-                mesSelecionado = YearMonth.now();
-            }
-        } else {
-            List<LocalDate> datas = manifestoRepo.listarDatasManifestosOrdenadasDesc();
-            if (!datas.isEmpty()) {
-                mesSelecionado = YearMonth.from(datas.get(0));
-            } else {
-                mesSelecionado = YearMonth.now();
-            }
-        }
-
-        YearMonth mesAnterior = mesSelecionado.minusMonths(1);
-
-        LocalDate inicioMes = mesSelecionado.atDay(1);
-        LocalDate fimMes = mesSelecionado.atEndOfMonth();
-        LocalDate inicioMesAnterior = mesAnterior.atDay(1);
-        LocalDate fimMesAnterior = mesAnterior.atEndOfMonth();
-
-        List<Manifesto> manifestos = manifestoRepo.buscarPorPeriodoComMotoristaEVeiculo(inicioMes, fimMes);
-        List<Manifesto> manifestosAnterior =
-                manifestoRepo.buscarPorPeriodoComMotoristaEVeiculo(inicioMesAnterior, fimMesAnterior);
-
-        long totalManifestos = manifestos.size();
-        BigDecimal custoOperacionalTotal = manifestos.stream()
-                .map(m -> m.getFreteAgregado() != null ? m.getFreteAgregado() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal custoMedioPorManifesto = totalManifestos > 0
-                ? custoOperacionalTotal.divide(BigDecimal.valueOf(totalManifestos), 2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
-
-        long totalManifestosAnterior = manifestosAnterior.size();
-        BigDecimal custoOperacionalTotalMesAnterior = manifestosAnterior.stream()
-                .map(m -> m.getFreteAgregado() != null ? m.getFreteAgregado() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal custoMedioPorManifestoMesAnterior = totalManifestosAnterior > 0
-                ? custoOperacionalTotalMesAnterior.divide(
-                        BigDecimal.valueOf(totalManifestosAnterior), 2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
-
-        BigDecimal variacaoCustoTotalPercentual = null;
-        if (custoOperacionalTotalMesAnterior.compareTo(BigDecimal.ZERO) > 0) {
-            variacaoCustoTotalPercentual = custoOperacionalTotal
-                    .subtract(custoOperacionalTotalMesAnterior)
-                    .divide(custoOperacionalTotalMesAnterior, 4, RoundingMode.HALF_UP)
-                    .multiply(BigDecimal.valueOf(100))
-                    .setScale(1, RoundingMode.HALF_UP);
-        }
-
-        BigDecimal variacaoCustoMedioPercentual = null;
-        if (custoMedioPorManifestoMesAnterior.compareTo(BigDecimal.ZERO) > 0) {
-            variacaoCustoMedioPercentual = custoMedioPorManifesto
-                    .subtract(custoMedioPorManifestoMesAnterior)
-                    .divide(custoMedioPorManifestoMesAnterior, 4, RoundingMode.HALF_UP)
-                    .multiply(BigDecimal.valueOf(100))
-                    .setScale(1, RoundingMode.HALF_UP);
-        }
-
-        Manifesto melhor = manifestos.stream()
-                .filter(m -> m.getValorRecebido() != null)
-                .max(Comparator.comparing(Manifesto::getValorRecebido))
-                .orElse(null);
-
-        Manifesto pior = manifestos.stream()
-                .filter(m -> m.getValorRecebido() != null)
-                .min(Comparator.comparing(Manifesto::getValorRecebido))
-                .orElse(null);
-
-        ManifestoDestaqueDTO melhorDTO = melhor != null ? toDestaqueDTO(melhor) : null;
-        ManifestoDestaqueDTO piorDTO = pior != null ? toDestaqueDTO(pior) : null;
-
-        return new DashboardOperacionalDTO(
-                mesSelecionado.toString(),
-                mesAnterior.toString(),
-                custoOperacionalTotal,
-                custoOperacionalTotalMesAnterior,
-                variacaoCustoTotalPercentual,
-                custoMedioPorManifesto,
-                custoMedioPorManifestoMesAnterior,
-                variacaoCustoMedioPercentual,
-                totalManifestos,
-                melhorDTO,
-                piorDTO);
-    }
-
-    private ManifestoDestaqueDTO toDestaqueDTO(Manifesto m) {
-        String motoristaNome = m.getMotorista() != null ? m.getMotorista().getNomeMotorista() : "—";
-        String veiculoRotulo = "—";
-        if (m.getVeiculo() != null) {
-            if (m.getVeiculo().getSubtipoVeiculo() != null) {
-                veiculoRotulo = m.getVeiculo().getSubtipoVeiculo().name();
-            } else if (m.getVeiculo().getTipoVeiculo() != null) {
-                veiculoRotulo = m.getVeiculo().getTipoVeiculo().name();
-            }
-        }
-        return new ManifestoDestaqueDTO(
-                m.getIdManifesto(),
-                m.getValorRecebido(),
-                m.getDataManifesto(),
-                m.getDestino(),
-                motoristaNome,
-                veiculoRotulo);
     }
 }
