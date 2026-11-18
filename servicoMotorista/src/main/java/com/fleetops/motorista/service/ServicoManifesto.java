@@ -50,16 +50,17 @@ public class ServicoManifesto {
     }
 
     public void SalvaOuNaoNoBancoComAsInformacoesDoManifesto(ManifestoDTO manifesto) {
-        Manifesto manifestoParaSalvar = new Manifesto();
         if (manifestoRepo.existsById(manifesto.getManifestoid())) {
             return;
         }
 
         DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/uuuu").withResolverStyle(ResolverStyle.STRICT);
 
-        manifestoParaSalvar.setAgregado(servAgregado.pegarPorCnpj(manifesto.getCnpjagregado()));
+        Manifesto manifestoParaSalvar = new Manifesto();
+        manifestoParaSalvar.setIdManifesto(manifesto.getManifestoid());
         manifestoParaSalvar.setDataManifesto(LocalDate.parse(manifesto.getData(), FMT));
         manifestoParaSalvar.setDestino(manifesto.getDestino());
+
         BigDecimal freteEmpresa =
                 manifesto.getValorfreteempresa() != null ? manifesto.getValorfreteempresa() : BigDecimal.ZERO;
         BigDecimal freteAgregado =
@@ -67,15 +68,46 @@ public class ServicoManifesto {
         manifestoParaSalvar.setFreteAgregado(freteAgregado);
         manifestoParaSalvar.setFreteEmpresa(freteEmpresa);
         manifestoParaSalvar.setValorRecebido(freteEmpresa.subtract(freteAgregado));
-        manifestoParaSalvar.setIdManifesto(manifesto.getManifestoid());
-        manifestoParaSalvar.setMotorista(servicoMotorista.pegarPorCPF(manifesto.getCpfmotorista()));
         manifestoParaSalvar.setObservacoes(manifesto.getObservacoes());
-        manifestoParaSalvar.setVeiculo(sservicoVeiculo.acharPorPlaca(manifesto.getPlaca()));
-        if (manifestoParaSalvar.getAgregado() == null
-                || manifestoParaSalvar.getMotorista() == null
-                || manifestoParaSalvar.getVeiculo() == null) {
-            return;
+
+        Agregado agregado = null;
+        if (manifesto.getCnpjagregado() != null && !manifesto.getCnpjagregado().isBlank()) {
+            agregado = servAgregado.pegarPorCnpj(manifesto.getCnpjagregado());
         }
+        if (agregado == null
+                && manifesto.getAgregado() != null
+                && !manifesto.getAgregado().isBlank()) {
+            agregado = servAgregado.pegarPorNome(manifesto.getAgregado());
+        }
+        if (agregado == null) {
+            agregado = servAgregado.criarComDadosManifesto(manifesto.getAgregado(), manifesto.getCnpjagregado());
+        }
+        manifestoParaSalvar.setAgregado(agregado);
+
+        Veiculo veiculo = sservicoVeiculo.acharPorPlaca(manifesto.getPlaca());
+        if (veiculo == null) {
+            veiculo = sservicoVeiculo.criarComPlacaEAgregado(manifesto.getPlaca(), agregado);
+        }
+        manifestoParaSalvar.setVeiculo(veiculo);
+
+        Motorista motorista = null;
+        if (manifesto.getCpfmotorista() != null && !manifesto.getCpfmotorista().isBlank()) {
+            motorista = servicoMotorista.pegarPorCPF(manifesto.getCpfmotorista());
+        }
+        if (motorista == null
+                && manifesto.getMotorista() != null
+                && !manifesto.getMotorista().isBlank()) {
+            motorista = servicoMotorista.pegarPorNome(manifesto.getMotorista());
+        }
+        if (motorista == null) {
+            motorista = servicoMotorista.criarComDadosManifesto(
+                    manifesto.getMotorista(), manifesto.getCpfmotorista(), veiculo, agregado);
+        } else if (motorista.getVeiculo() == null && veiculo != null) {
+            motorista.setVeiculo(veiculo);
+            servicoMotorista.salvar(motorista);
+        }
+        manifestoParaSalvar.setMotorista(motorista);
+
         manifestoRepo.save(manifestoParaSalvar);
     }
 

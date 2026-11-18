@@ -83,8 +83,9 @@ public class CsvParaJson<T> {
             throw new NaoFoiPossivelAcharEncoding(
                     "A leitura desse arquivo falhou", "Não foi possivel encontrar o encoding");
         }
-        ;
-        System.out.println(encoding);
+        if (encoding == null || encoding.isBlank()) {
+            encoding = "UTF-8";
+        }
         try (Reader reader = new InputStreamReader(arquivo.getInputStream(), Charset.forName(encoding))) {
             parser.parse(reader);
         } catch (IOException e) {

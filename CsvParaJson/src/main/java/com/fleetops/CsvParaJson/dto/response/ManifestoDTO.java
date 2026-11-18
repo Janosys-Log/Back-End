@@ -1,5 +1,9 @@
 package com.fleetops.CsvParaJson.dto.response;
 
+import com.fleetops.CsvParaJson.converters.AgregadoCleanerConversion;
+import com.fleetops.CsvParaJson.converters.DigitsOnlyConversion;
+import com.fleetops.CsvParaJson.converters.PlacaCleanerConversion;
+import com.univocity.parsers.annotations.Convert;
 import com.univocity.parsers.annotations.Parsed;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -7,7 +11,8 @@ import java.math.BigDecimal;
 
 public class ManifestoDTO {
 
-    @Parsed(field = "Manifesto (id)")
+    @Parsed(field = {"Manifesto", "Manifesto (id)"})
+    @Convert(conversionClass = DigitsOnlyConversion.class)
     @NotBlank(message = "A linha precisa ter um campo 'Manifesto (id)' preenchido")
     @Pattern(regexp = "^\\d+$", message = "Somente Numeros são permitidos no campo 'Manifesto (id)'")
     private String manifestoid;
@@ -24,20 +29,24 @@ public class ManifestoDTO {
     @Pattern(regexp = "[\\p{L} ]+", message = "O campo 'Motorista' só podeter letras,espaços e acentos")
     private String motorista;
 
-    @Parsed(field = "CPF (motorista)")
-    @Pattern(regexp = "^\\d{3}\\.?\\d{3}\\.?\\d{3}\\d{2}$", message = "Formato de do campo 'CPF Motorista' inválido")
+    @Parsed(field = {"CPF", "CPF (motorista)"})
+    @Convert(conversionClass = DigitsOnlyConversion.class)
+    @NotBlank(message = "A linha precisa ter o campo 'CPF Motorista' preenchido")
+    @Pattern(regexp = "^\\d{11}$", message = "Formato de do campo 'CPF Motorista' inválido")
     private String cpfmotorista;
 
     @Parsed(field = "Agregado")
+    @Convert(conversionClass = AgregadoCleanerConversion.class)
     @NotBlank(message = "A linha Precisa ter um campo 'Agragado' preenchido")
-    @Pattern(regexp = "^[^0-9]*$", message = "O campo Agragado não pode conter números")
     private String agregado;
 
-    @Parsed(field = "CNPJ (agregado)")
-    @Pattern(regexp = "^[A-Z0-9]{12}\\d{2}$", message = "Formato do campo 'CNPJ (agregado)' inválido")
+    @Parsed(field = {"CPF/CNPJ Agregado", "CNPJ (agregado)", "CNPJ Agregado"})
+    @Convert(conversionClass = DigitsOnlyConversion.class)
+    @Pattern(regexp = "^[A-Z0-9]{11,14}$", message = "Formato do campo 'CNPJ (agregado)' inválido")
     private String cnpjagregado;
 
-    @Parsed(field = "Veículo (placa)")
+    @Parsed(field = {"Veículo", "Veículo (placa)", "Veiculo"})
+    @Convert(conversionClass = PlacaCleanerConversion.class)
     @NotBlank(message = "A linha precisa ter um campo 'Placa' preenchido")
     @Pattern(
             regexp = "^[A-Z0-9]{7}$",
@@ -45,25 +54,25 @@ public class ManifestoDTO {
     private String placa;
 
     @Parsed(field = "Destino")
+    @Convert(conversionClass = AgregadoCleanerConversion.class)
     @NotBlank(message = "A linha precisa ter um campo 'Destino' preenchido")
-    @Pattern(regexp = "[\\p{L} ]+", message = "O campo 'Destino' só aceita letras(com  acentos) e espaços")
     private String destino;
 
-    @Parsed(field = "Valor Frete(agregado)")
+    @Parsed(field = {"Valor Frete", "Valor Frete(agregado)"})
     @NotBlank(message = "A linha precisa ter um campo 'Valor Frete(agregado)'")
     @Pattern(
-            regexp = "\\d{1,3}(\\.\\d{3})*,\\d{2}",
+            regexp = "^\\d{1,3}(\\.\\d{3})*(,\\d{1,2})?$|^\\d+(,\\d{1,2})?$",
             message = "O campo 'Valor Frete(agregado)' só aceita o formato da moeda brasileira")
     private String valorfreteagregado;
 
-    @Parsed(field = "Valor Frete(empresa)")
+    @Parsed(field = {"Valor Fretes", "Valor Frete(empresa)"})
     @NotBlank(message = "A linha precisa ter um campo 'Valor Frete(empresa)'")
     @Pattern(
-            regexp = "\\d{1,3}(\\.\\d{3})*,\\d{2}",
+            regexp = "^\\d{1,3}(\\.\\d{3})*(,\\d{1,2})?$|^\\d+(,\\d{1,2})?$",
             message = "O campo 'Valor Frete(empresa)' só aceita o formato da moeda brasileira")
     private String valorfreteempresa;
 
-    @Parsed(field = "Observações")
+    @Parsed(field = {"Observações operacionais", "Observações", "Observacoes operacionais", "Observacoes"})
     private String observacoes;
 
     public String getAgregado() {

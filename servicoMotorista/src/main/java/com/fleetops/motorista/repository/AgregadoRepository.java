@@ -9,4 +9,6 @@ public interface AgregadoRepository extends JpaRepository<Agregado, Long> {
     Agregado findBycnpjAgregado(String cnpj);
 
     boolean existsBycnpjAgregado(String cnpf);
+
+    boolean existsBynomeAgregado(String nome);
 }
