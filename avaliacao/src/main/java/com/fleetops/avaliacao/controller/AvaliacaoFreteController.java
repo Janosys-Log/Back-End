@@ -39,43 +39,74 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Avaliações de Frete", description = "Endpoints para registro e consulta de avaliações de motoristas")
 public class AvaliacaoFreteController {
 
-        private final AvaliacaoFreteService service;
+    private final AvaliacaoFreteService service;
 
-        @GetMapping
-        @Operation(summary = "Listar avaliações de frete", description = "Retorna a lista de todas as avaliações de frete cadastradas.")
-        @ApiResponses({
-                        @ApiResponse(responseCode = "200", description = "Avaliações retornadas com sucesso", content = @Content(array = @ArraySchema(schema = @Schema(implementation = AvaliacaoResponseDTO.class)))),
-                        @ApiResponse(responseCode = "500", description = "Erro interno ao consultar o banco de dados")
-        })
-        public ResponseEntity<List<AvaliacaoResponseDTO>> listarTodos() {
-                return new ResponseEntity<List<AvaliacaoResponseDTO>>(this.service.listarAvaliacoes(), HttpStatus.OK);
-        }
+    @GetMapping
+    @Operation(
+            summary = "Listar avaliações de frete",
+            description = "Retorna a lista de todas as avaliações de frete cadastradas.")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "Avaliações retornadas com sucesso",
+                content =
+                        @Content(array = @ArraySchema(schema = @Schema(implementation = AvaliacaoResponseDTO.class)))),
+        @ApiResponse(responseCode = "500", description = "Erro interno ao consultar o banco de dados")
+    })
+    public ResponseEntity<List<AvaliacaoResponseDTO>> listarTodos(@RequestParam(required = false) Long motoristaId) {
+        // Com ?motoristaId=X devolve só as avaliações desse motorista.
+        List<AvaliacaoResponseDTO> lista =
+                motoristaId != null ? this.service.listarPorMotorista(motoristaId) : this.service.listarAvaliacoes();
+        return new ResponseEntity<>(lista, HttpStatus.OK);
+    }
 
-        @GetMapping("/{id}")
-        @Operation(summary = "Buscar avaliação de frete por ID", description = "Retorna a avaliação de frete correspondente ao ID informado.")
-        @ApiResponses({
-                        @ApiResponse(responseCode = "200", description = "Avaliação retornada com sucesso", content = @Content(schema = @Schema(implementation = AvaliacaoResponseDTO.class))),
-                        @ApiResponse(responseCode = "404", description = "Avaliação não encontrada para o ID informado"),
-                        @ApiResponse(responseCode = "500", description = "Erro interno ao consultar o banco de dados")
-        })
-        public ResponseEntity<AvaliacaoResponseDTO> buscarPorId(@PathVariable Long id) {
-                return new ResponseEntity<AvaliacaoResponseDTO>(this.service.buscarAvaliacao(id), HttpStatus.OK);
-        }
+    @GetMapping("/{id}")
+    @Operation(
+            summary = "Buscar avaliação de frete por ID",
+            description = "Retorna a avaliação de frete correspondente ao ID informado.")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "Avaliação retornada com sucesso",
+                content = @Content(schema = @Schema(implementation = AvaliacaoResponseDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Avaliação não encontrada para o ID informado"),
+        @ApiResponse(responseCode = "500", description = "Erro interno ao consultar o banco de dados")
+    })
+    public ResponseEntity<AvaliacaoResponseDTO> buscarPorId(@PathVariable Long id) {
+        return new ResponseEntity<>(this.service.buscarAvaliacao(id), HttpStatus.OK);
+    }
 
-        @PostMapping
-        @Operation(summary = "Registrar avaliação de frete", description = """
+    @PostMapping
+    @Operation(
+            summary = "Registrar avaliação de frete",
+            description =
+                    """
                         Recebe nota (1 a 5), número do manifesto e feedback obrigatórios, vinculando-os ao motorista informado.
                         Escala: 1=Péssimo, 2=Ruim, 3=Regular, 4=Bom, 5=Excelente.
-                        A avaliação fica associada ao motorista e à data de registro para uso futuro no ranking.
+                        NÃO exige que o manifesto exista na base importada: o número é gravado em num_modal.
                         """)
-        @ApiResponses({
-                        @ApiResponse(responseCode = "201", description = "Avaliação registrada com sucesso", content = @Content(schema = @Schema(implementation = AvaliacaoResponseDTO.class))),
-                        @ApiResponse(responseCode = "400", description = "Dados inválidos (nota fora de 1-5, campos obrigatórios ausentes)"),
-                        @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-        })
-        public ResponseEntity<AvaliacaoResponseDTO> registrar(@Valid @RequestBody AvaliacaoRequestDTO request) {
-                AvaliacaoFrete avaliacao = service.verificacaAvaliacao(request);
-                AvaliacaoResponseDTO response = service.registrar(avaliacao);
-                return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        }
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "201",
+                description = "Avaliação registrada com sucesso",
+                content = @Content(schema = @Schema(implementation = AvaliacaoResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "Dados inválidos (nota fora de 1-5, campos obrigatórios ausentes)"),
+        @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    })
+    public ResponseEntity<AvaliacaoResponseDTO> registrar(@Valid @RequestBody AvaliacaoRequestDTO request) {
+        // Monta e grava direto — sem consultar existência do manifesto
+        AvaliacaoFrete avaliacao = AvaliacaoFrete.builder()
+                .nota(request.getNota())
+                .numeroManifesto(request.getNumeroManifesto())
+                .feedback(
+                        request.getFeedback() == null
+                                ? ""
+                                : request.getFeedback().trim())
+                .motoristaId(request.getMotoristaId())
+                .build();
+        AvaliacaoResponseDTO response = service.registrar(avaliacao);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
 }

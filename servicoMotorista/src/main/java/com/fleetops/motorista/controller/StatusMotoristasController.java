@@ -3,13 +3,10 @@ package com.fleetops.motorista.controller;
 import com.fleetops.motorista.dto.StatusDTO;
 import com.fleetops.motorista.service.StatusMotoristasService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -40,17 +37,25 @@ public class StatusMotoristasController {
             summary = "Atualizar status do motorista",
             description =
                     """
-            Recebe status (Disponivel, Em_Rota, Indisponivel, Indesejado) e mostoristaId obrigatórios.
+            Recebe status (Disponivel, Em_Rota, Indisponivel, Indesejado) e motoristaId obrigatórios.
+            Para colocar o motorista em rota (Em_Rota) também é obrigatório informar numeroManifesto (inteiro positivo),
+            que não pode estar em uso por outro motorista em rota. Nos demais status o numeroManifesto é ignorado
+            e o manifesto atual do motorista é limpo.
             Fluxo:
-              Motorista Com Status Disponível → Operador Realiza Ligação →  Motorista aceita o Frete → Status Muda para “Em Rota”
+              Motorista Com Status Disponível → Operador Realiza Ligação →  Motorista aceita o Frete → Status Muda para “Em Rota” (informando o manifesto)
               Motorista Com Status Disponível → Operador Realiza Ligação → Motorista Recusa → Status muda para Indisponível (Status dura 15 dias ou até o operador alterar)
             """)
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Status atualizado com sucesso", content = @Content(schema = @Schema(implementation = ResponseEntity.class))),
-            @ApiResponse(responseCode = "400", description = "Fluxo de Status incorreto, Erro interno do servidor"),
-            @ApiResponse(responseCode = "404", description = "Motorista não encontrado")
+        @ApiResponse(responseCode = "204", description = "Status atualizado com sucesso"),
+        @ApiResponse(
+                responseCode = "400",
+                description =
+                        "Fluxo de status incorreto, manifesto ausente ou inválido para Em_Rota, ou corpo da requisição inválido"),
+        @ApiResponse(responseCode = "404", description = "Motorista não encontrado"),
+        @ApiResponse(responseCode = "409", description = "Manifesto já está em uso por outro motorista em rota")
     })
-    public ResponseEntity<String> atualizaStatusMotorista(@Valid @RequestBody StatusDTO statusDTO) {
-        return motoristaService.atualizaStatusMotorista(statusDTO);
+    public ResponseEntity<Void> atualizaStatusMotorista(@Valid @RequestBody StatusDTO statusDTO) {
+        motoristaService.atualizaStatusMotorista(statusDTO);
+        return ResponseEntity.noContent().build();
     }
 }

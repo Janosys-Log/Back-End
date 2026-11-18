@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS `motorista` (
   `contato_motorista` VARCHAR(20),
   `status` VARCHAR(30) DEFAULT 'DISPONIVEL',
   `ultimo_manifesto` DATE,
+  `manifesto_atual` BIGINT,
   `contador_rota_sp` INT DEFAULT 0,
   `nota_media` FLOAT DEFAULT 0.0,
   `fk_id_veiculo` INT UNIQUE,
