@@ -1,7 +1,10 @@
 package com.fleetops.motorista.service;
 
+import com.fleetops.motorista.domain.Agregado;
 import com.fleetops.motorista.domain.Manifesto;
+import com.fleetops.motorista.domain.Motorista;
 import com.fleetops.motorista.domain.RendimentoMensal;
+import com.fleetops.motorista.domain.Veiculo;
 import com.fleetops.motorista.dto.RentabilidadeDTO;
 import com.fleetops.motorista.dto.ResponseDate;
 import com.fleetops.motorista.ouvinte.dto.response.ManifestoDTO;
