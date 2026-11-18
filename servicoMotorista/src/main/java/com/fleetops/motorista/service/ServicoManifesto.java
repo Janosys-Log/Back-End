@@ -5,6 +5,9 @@ import com.fleetops.motorista.domain.Manifesto;
 import com.fleetops.motorista.domain.Motorista;
 import com.fleetops.motorista.domain.RendimentoMensal;
 import com.fleetops.motorista.domain.Veiculo;
+import com.fleetops.motorista.dto.CardsCustoDTO;
+import com.fleetops.motorista.dto.CustoOperacionalDTO;
+import com.fleetops.motorista.dto.ManifestoDestaqueDTO;
 import com.fleetops.motorista.dto.RentabilidadeDTO;
 import com.fleetops.motorista.dto.ResponseDate;
 import com.fleetops.motorista.ouvinte.dto.response.ManifestoDTO;
@@ -16,6 +19,7 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -393,5 +397,117 @@ public class ServicoManifesto {
             anterior = rendimento.rendimentoMedio();
         }
         return map;
+    }
+
+    @Transactional(readOnly = true)
+    public CardsCustoDTO obterCardsCusto(String mesParam) {
+        YearMonth mesSelecionado;
+        if (mesParam != null && !mesParam.isBlank()) {
+            try {
+                mesSelecionado = YearMonth.parse(mesParam.trim());
+            } catch (Exception e) {
+                mesSelecionado = YearMonth.now();
+            }
+        } else {
+            List<LocalDate> datas = manifestoRepo.listarDatasManifestosOrdenadasDesc();
+            if (!datas.isEmpty()) {
+                mesSelecionado = YearMonth.from(datas.get(0));
+            } else {
+                mesSelecionado = YearMonth.now();
+            }
+        }
+
+        YearMonth mesAnterior = mesSelecionado.minusMonths(1);
+
+        LocalDate inicioMes = mesSelecionado.atDay(1);
+        LocalDate fimMes = mesSelecionado.atEndOfMonth();
+        LocalDate inicioMesAnterior = mesAnterior.atDay(1);
+        LocalDate fimMesAnterior = mesAnterior.atEndOfMonth();
+
+        List<Manifesto> manifestos = manifestoRepo.buscarPorPeriodoComMotoristaEVeiculo(inicioMes, fimMes);
+        List<Manifesto> manifestosAnterior =
+                manifestoRepo.buscarPorPeriodoComMotoristaEVeiculo(inicioMesAnterior, fimMesAnterior);
+
+        boolean semDados = manifestos.isEmpty();
+        if (semDados) {
+            return new CardsCustoDTO(mesSelecionado.toString(), true, null, null, null);
+        }
+
+        long totalManifestos = manifestos.size();
+        BigDecimal custoTotal = manifestos.stream()
+                .map(m -> m.getFreteAgregado() != null ? m.getFreteAgregado() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal custoMedio = totalManifestos > 0
+                ? custoTotal.divide(BigDecimal.valueOf(totalManifestos), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        long totalManifestosAnterior = manifestosAnterior.size();
+        BigDecimal custoTotalAnterior = manifestosAnterior.isEmpty()
+                ? null
+                : manifestosAnterior.stream()
+                        .map(m -> m.getFreteAgregado() != null ? m.getFreteAgregado() : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal custoMedioAnterior = (totalManifestosAnterior > 0 && custoTotalAnterior != null)
+                ? custoTotalAnterior.divide(BigDecimal.valueOf(totalManifestosAnterior), 2, RoundingMode.HALF_UP)
+                : null;
+
+        BigDecimal variacaoTotalPercentual = null;
+        if (custoTotalAnterior != null && custoTotalAnterior.compareTo(BigDecimal.ZERO) > 0) {
+            variacaoTotalPercentual = custoTotal
+                    .subtract(custoTotalAnterior)
+                    .divide(custoTotalAnterior, 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100))
+                    .setScale(1, RoundingMode.HALF_UP);
+        }
+
+        BigDecimal variacaoCustoMedioPercentual = null;
+        if (custoMedioAnterior != null && custoMedioAnterior.compareTo(BigDecimal.ZERO) > 0) {
+            variacaoCustoMedioPercentual = custoMedio
+                    .subtract(custoMedioAnterior)
+                    .divide(custoMedioAnterior, 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100))
+                    .setScale(1, RoundingMode.HALF_UP);
+        }
+
+        CustoOperacionalDTO custoDTO = new CustoOperacionalDTO(
+                custoTotal,
+                custoTotalAnterior,
+                variacaoTotalPercentual,
+                custoMedio,
+                custoMedioAnterior,
+                variacaoCustoMedioPercentual,
+                totalManifestos);
+
+        Manifesto melhor = manifestos.stream()
+                .filter(m -> m.getValorRecebido() != null)
+                .max(Comparator.comparing(Manifesto::getValorRecebido))
+                .orElse(null);
+
+        Manifesto pior = manifestos.stream()
+                .filter(m -> m.getValorRecebido() != null)
+                .min(Comparator.comparing(Manifesto::getValorRecebido))
+                .orElse(null);
+
+        ManifestoDestaqueDTO melhorDTO = melhor != null ? toDestaqueDTO(melhor) : null;
+        ManifestoDestaqueDTO piorDTO = pior != null ? toDestaqueDTO(pior) : null;
+
+        return new CardsCustoDTO(mesSelecionado.toString(), false, custoDTO, melhorDTO, piorDTO);
+    }
+
+    private ManifestoDestaqueDTO toDestaqueDTO(Manifesto m) {
+        String motoristaNome = m.getMotorista() != null ? m.getMotorista().getNomeMotorista() : "—";
+        String veiculoRotulo = "—";
+        if (m.getVeiculo() != null) {
+            if (m.getVeiculo().getSubtipoVeiculo() != null) {
+                veiculoRotulo = m.getVeiculo().getSubtipoVeiculo().name();
+            } else if (m.getVeiculo().getTipoVeiculo() != null) {
+                veiculoRotulo = m.getVeiculo().getTipoVeiculo().name();
+            }
+        }
+        String dataStr = m.getDataManifesto() != null ? m.getDataManifesto().toString() : null;
+        return new ManifestoDestaqueDTO(
+                m.getIdManifesto(), m.getValorRecebido(), dataStr, m.getDestino(), motoristaNome, veiculoRotulo);
     }
 }
