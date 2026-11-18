@@ -32,31 +32,51 @@ public class OuvinteCsvParaJson {
 
     @RabbitListener(queues = RabbitConfig.filaVeiculo)
     public boolean salvarDadosRebidos(ResultadoLinhasDoCsv<VeiculoDTO> JsonCsv) {
-        for (VeiculoDTO veiculo : JsonCsv.getValidos()) {
-            servicoAgregado.SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(veiculo);
-            servicoVeiculo.SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(veiculo);
-            servicoMotorista.SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(veiculo);
+        if (JsonCsv != null && JsonCsv.getValidos() != null) {
+            for (VeiculoDTO veiculo : JsonCsv.getValidos()) {
+                try {
+                    servicoAgregado.SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(veiculo);
+                    servicoVeiculo.SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(veiculo);
+                    servicoMotorista.SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(veiculo);
+                } catch (Exception e) {
+                    System.err.println("Erro ao processar linha de veículo (" + veiculo.getPlaca() + "): " + e.getMessage());
+                }
+            }
         }
-        servicoRegistroImportacao.registrarImportacao(
-                "VEICULOS",
-                JsonCsv.getNomeArquivo(),
-                JsonCsv.getDataHora(),
-                JsonCsv.getValidos() != null ? JsonCsv.getValidos().size() : 0);
-        System.out.println("Arquivo de Veículos Gravado");
+        try {
+            servicoRegistroImportacao.registrarImportacao(
+                    "VEICULOS",
+                    JsonCsv != null ? JsonCsv.getNomeArquivo() : null,
+                    JsonCsv != null ? JsonCsv.getDataHora() : null,
+                    (JsonCsv != null && JsonCsv.getValidos() != null) ? JsonCsv.getValidos().size() : 0);
+        } catch (Exception e) {
+            System.err.println("Erro ao registrar importação de veículos: " + e.getMessage());
+        }
+        System.out.println("Arquivo de Veículos Gravado com sucesso");
         return true;
     }
 
     @RabbitListener(queues = RabbitConfig.filaManifesto)
     public boolean salvarDadosRebidosManifesto(ResultadoLinhasDoCsv<ManifestoDTO> Jsoncsv) {
-        for (ManifestoDTO manifesto : Jsoncsv.getValidos()) {
-            servicoManifesto.SalvaOuNaoNoBancoComAsInformacoesDoManifesto(manifesto);
+        if (Jsoncsv != null && Jsoncsv.getValidos() != null) {
+            for (ManifestoDTO manifesto : Jsoncsv.getValidos()) {
+                try {
+                    servicoManifesto.SalvaOuNaoNoBancoComAsInformacoesDoManifesto(manifesto);
+                } catch (Exception e) {
+                    System.err.println("Erro ao processar linha de manifesto (" + manifesto.getManifestoid() + "): " + e.getMessage());
+                }
+            }
         }
-        servicoRegistroImportacao.registrarImportacao(
-                "MANIFESTOS",
-                Jsoncsv.getNomeArquivo(),
-                Jsoncsv.getDataHora(),
-                Jsoncsv.getValidos() != null ? Jsoncsv.getValidos().size() : 0);
-        System.out.println("Arquivo de Manifestos Gravado");
+        try {
+            servicoRegistroImportacao.registrarImportacao(
+                    "MANIFESTOS",
+                    Jsoncsv != null ? Jsoncsv.getNomeArquivo() : null,
+                    Jsoncsv != null ? Jsoncsv.getDataHora() : null,
+                    (Jsoncsv != null && Jsoncsv.getValidos() != null) ? Jsoncsv.getValidos().size() : 0);
+        } catch (Exception e) {
+            System.err.println("Erro ao registrar importação de manifestos: " + e.getMessage());
+        }
+        System.out.println("Arquivo de Manifestos Gravado com sucesso");
         return true;
     }
 }
