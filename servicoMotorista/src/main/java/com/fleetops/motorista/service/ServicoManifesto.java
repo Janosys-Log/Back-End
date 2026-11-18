@@ -186,7 +186,10 @@ public class ServicoManifesto {
                     motorista = servicoMotorista.criarComDadosManifesto(nomeMotorista, cpf, veiculo, agregado);
                 } else if (motorista != null && motorista.getVeiculo() == null && veiculo != null) {
                     motorista.setVeiculo(veiculo);
-                    servicoMotorista.salvar(motorista);
+                    try {
+                        servicoMotorista.salvar(motorista);
+                    } catch (Exception ignored) {
+                    }
                 }
                 if (motorista != null) {
                     if (cpf != null && !cpf.isBlank()) cacheMotoristaPorCpf.put(cpf, motorista);

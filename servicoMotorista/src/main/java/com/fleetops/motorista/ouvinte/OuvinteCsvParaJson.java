@@ -58,7 +58,8 @@ public class OuvinteCsvParaJson {
                     servicoVeiculo.SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(veiculo);
                     servicoMotorista.SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(veiculo);
                 } catch (Exception e) {
-                    System.err.println("Erro ao processar linha de veículo (" + veiculo.getPlaca() + "): " + e.getMessage());
+                    System.err.println(
+                            "Erro ao processar linha de veículo (" + veiculo.getPlaca() + "): " + e.getMessage());
                 }
             }
         }
@@ -67,7 +68,9 @@ public class OuvinteCsvParaJson {
                     "VEICULOS",
                     JsonCsv != null ? JsonCsv.getNomeArquivo() : null,
                     JsonCsv != null ? JsonCsv.getDataHora() : null,
-                    (JsonCsv != null && JsonCsv.getValidos() != null) ? JsonCsv.getValidos().size() : 0);
+                    (JsonCsv != null && JsonCsv.getValidos() != null)
+                            ? JsonCsv.getValidos().size()
+                            : 0);
         } catch (Exception e) {
             System.err.println("Erro ao registrar importação de veículos: " + e.getMessage());
         }
@@ -77,7 +80,9 @@ public class OuvinteCsvParaJson {
 
     @RabbitListener(queues = RabbitConfig.filaManifesto)
     public boolean salvarDadosRebidosManifesto(ResultadoLinhasDoCsv<ManifestoDTO> Jsoncsv) {
-        if (Jsoncsv != null && Jsoncsv.getValidos() != null && !Jsoncsv.getValidos().isEmpty()) {
+        if (Jsoncsv != null
+                && Jsoncsv.getValidos() != null
+                && !Jsoncsv.getValidos().isEmpty()) {
             servicoManifesto.salvarManifestosEmLote(Jsoncsv.getValidos());
         }
         try {
@@ -85,7 +90,9 @@ public class OuvinteCsvParaJson {
                     "MANIFESTOS",
                     Jsoncsv != null ? Jsoncsv.getNomeArquivo() : null,
                     Jsoncsv != null ? Jsoncsv.getDataHora() : null,
-                    (Jsoncsv != null && Jsoncsv.getValidos() != null) ? Jsoncsv.getValidos().size() : 0);
+                    (Jsoncsv != null && Jsoncsv.getValidos() != null)
+                            ? Jsoncsv.getValidos().size()
+                            : 0);
         } catch (Exception e) {
             System.err.println("Erro ao registrar importação de manifestos: " + e.getMessage());
         }

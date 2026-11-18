@@ -9,7 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -76,8 +76,8 @@ public class Motorista {
     @Builder.Default
     private Float notaMedia = 0.0f;
 
-    @OneToOne(fetch = FetchType.EAGER, orphanRemoval = true)
-    @JoinColumn(name = "veiculo_id", unique = true)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "veiculo_id")
     private Veiculo veiculo;
 
     /**

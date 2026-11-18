@@ -77,11 +77,16 @@ public class ServicoMotorista {
         }
         if (motoristaRepo.existsByCpfMotorista(cpf)) {
             Motorista m = motoristaRepo.findBycpfMotorista(cpf);
-            if (m.getVeiculo() == null && veiculo != null) {
-                m.setVeiculo(veiculo);
-                motoristaRepo.save(m);
+            if (m != null) {
+                if (m.getVeiculo() == null && veiculo != null) {
+                    m.setVeiculo(veiculo);
+                    try {
+                        motoristaRepo.save(m);
+                    } catch (Exception ignored) {
+                    }
+                }
+                return m;
             }
-            return m;
         }
         Motorista motorista = new Motorista();
         motorista.setNomeMotorista(nome);
@@ -91,7 +96,15 @@ public class ServicoMotorista {
         if (agregado != null) {
             motorista.setAgregadoId(agregado.getIdAgregado());
         }
-        return motoristaRepo.save(motorista);
+        try {
+            return motoristaRepo.save(motorista);
+        } catch (Exception e) {
+            Motorista m = motoristaRepo.findBycpfMotorista(cpf);
+            if (m != null) {
+                return m;
+            }
+            return motorista;
+        }
     }
 
     public void SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(VeiculoDTO csvVeiculo) {
