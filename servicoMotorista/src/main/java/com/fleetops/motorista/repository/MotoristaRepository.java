@@ -23,6 +23,10 @@ public interface MotoristaRepository extends JpaRepository<Motorista, Long> {
 
     boolean existsByCpfMotorista(String cpf);
 
+    Optional<Motorista> findFirstBynomeMotorista(String nome);
+
+    boolean existsBynomeMotorista(String nome);
+
     boolean existsByManifestoAtualAndIdMotoristaNot(Long manifestoAtual, Long idMotorista);
 
     List<Motorista> findByStatusAndVeiculoIdVeiculoIn(StatusMotorista status, List<Long> ids);

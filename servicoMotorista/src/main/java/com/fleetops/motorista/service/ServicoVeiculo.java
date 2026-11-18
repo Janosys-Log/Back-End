@@ -42,35 +42,60 @@ public class ServicoVeiculo {
         return Repo.existsByplacaVeiculo(Placa);
     }
 
-    public void SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(VeiculoDTO veiculo) {
+    public Veiculo acharPorPlaca(String placa) {
+        return Repo.findByplacaVeiculo(placa);
+    }
+
+    public Veiculo criarComPlacaEAgregado(String placa, Agregado agregado) {
+        if (existe(placa)) {
+            return acharPorPlaca(placa);
+        }
+        Veiculo veiculo = new Veiculo();
+        veiculo.setPlacaVeiculo(placa);
+        if (agregado != null) {
+            veiculo.setAgregadoId(agregado.getIdAgregado());
+        }
+        return Repo.save(veiculo);
+    }
+
+    public Veiculo SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(VeiculoDTO veiculo) {
         try {
             Veiculo veiculoparasalvar = new Veiculo();
             if (existe(veiculo.getPlaca())) {
                 veiculoparasalvar = Repo.findByplacaVeiculo(veiculo.getPlaca());
+                if (veiculo.getSubtipoVeiculo() != null) {
+                    veiculoparasalvar.setSubtipoVeiculo(veiculo.getSubtipoVeiculo());
+                    veiculoparasalvar.setTipoVeiculo(veiculo.getSubtipoVeiculo().getTipo());
+                }
+                return Repo.save(veiculoparasalvar);
+            }
+
+            Agregado agregado = null;
+            if (veiculo.getCnpjagregado() != null && !veiculo.getCnpjagregado().isBlank()) {
+                agregado = servicoagregado.pegarPorCnpj(veiculo.getCnpjagregado());
+            }
+            if (agregado == null
+                    && veiculo.getAgregado() != null
+                    && !veiculo.getAgregado().isBlank()) {
+                agregado = servicoagregado.pegarPorNome(veiculo.getAgregado());
+            }
+            if (agregado == null) {
+                agregado = servicoagregado.SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(veiculo);
+            }
+
+            if (agregado != null) {
+                veiculoparasalvar.setAgregadoId(agregado.getIdAgregado());
+            }
+            if (veiculo.getSubtipoVeiculo() != null) {
                 veiculoparasalvar.setTipoVeiculo(veiculo.getSubtipoVeiculo().getTipo());
                 veiculoparasalvar.setSubtipoVeiculo(veiculo.getSubtipoVeiculo());
-                veiculoparasalvar.setPlacaVeiculo(veiculo.getPlaca());
-                Repo.save(veiculoparasalvar);
-                return;
             }
-            Agregado agregado = servicoagregado.pegarPorCnpj(veiculo.getCnpjagregado());
-            veiculoparasalvar.setAgregadoId(agregado.getIdAgregado());
-            veiculoparasalvar.setTipoVeiculo(veiculo.getSubtipoVeiculo().getTipo());
-            veiculoparasalvar.setSubtipoVeiculo(veiculo.getSubtipoVeiculo());
             veiculoparasalvar.setPlacaVeiculo(veiculo.getPlaca());
-            Repo.save(veiculoparasalvar);
+            return Repo.save(veiculoparasalvar);
 
         } catch (Exception e) {
-            System.out.println("Não foi possivel realizar o salvamento desse Veiculo");
-            System.out.println("Informações desse Veiculo:");
-            System.out.println("Placa:" + veiculo.getPlaca());
-            System.out.println("Tipo:" + veiculo.getTipoVeiculo());
-            System.out.println("Subtipo:" + veiculo.getSubtipoVeiculo());
-            System.out.println("Status:" + veiculo.getStatus());
+            System.out.println("Não foi possivel realizar o salvamento desse Veiculo: " + e.getMessage());
+            return null;
         }
-    }
-
-    public Veiculo acharPorPlaca(String placa) {
-        return Repo.findByplacaVeiculo(placa);
     }
 }
