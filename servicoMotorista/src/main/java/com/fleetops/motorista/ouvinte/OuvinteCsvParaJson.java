@@ -1,6 +1,7 @@
 package com.fleetops.motorista.ouvinte;
 
 import com.fleetops.motorista.config.RabbitConfig;
+import com.fleetops.motorista.domain.Agregado;
 import com.fleetops.motorista.ouvinte.dto.response.ManifestoDTO;
 import com.fleetops.motorista.ouvinte.dto.response.ResultadoLinhasDoCsv;
 import com.fleetops.motorista.ouvinte.dto.response.VeiculoDTO;
@@ -9,6 +10,8 @@ import com.fleetops.motorista.service.ServicoManifesto;
 import com.fleetops.motorista.service.ServicoMotorista;
 import com.fleetops.motorista.service.ServicoRegistroImportacao;
 import com.fleetops.motorista.service.ServicoVeiculo;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -35,14 +38,27 @@ public class OuvinteCsvParaJson {
     @RabbitListener(queues = RabbitConfig.filaVeiculo)
     public boolean salvarDadosRebidos(ResultadoLinhasDoCsv<VeiculoDTO> JsonCsv) {
         if (JsonCsv != null && JsonCsv.getValidos() != null) {
+            Map<String, Agregado> cacheAgregado = new HashMap<>();
+
             for (VeiculoDTO veiculo : JsonCsv.getValidos()) {
                 try {
-                    servicoAgregado.SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(veiculo);
+                    String cnpj = veiculo.getCnpjagregado();
+                    String nomeAgregado = veiculo.getAgregado();
+                    String chave = (cnpj != null && !cnpj.isBlank()) ? cnpj : nomeAgregado;
+
+                    if (chave != null && !chave.isBlank() && !cacheAgregado.containsKey(chave)) {
+                        Agregado a = servicoAgregado.SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(veiculo);
+                        if (a != null) {
+                            cacheAgregado.put(chave, a);
+                            if (a.getCnpjAgregado() != null) cacheAgregado.put(a.getCnpjAgregado(), a);
+                            if (a.getNomeAgregado() != null) cacheAgregado.put(a.getNomeAgregado(), a);
+                        }
+                    }
+
                     servicoVeiculo.SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(veiculo);
                     servicoMotorista.SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(veiculo);
                 } catch (Exception e) {
-                    System.err.println(
-                            "Erro ao processar linha de veículo (" + veiculo.getPlaca() + "): " + e.getMessage());
+                    System.err.println("Erro ao processar linha de veículo (" + veiculo.getPlaca() + "): " + e.getMessage());
                 }
             }
         }
@@ -51,9 +67,7 @@ public class OuvinteCsvParaJson {
                     "VEICULOS",
                     JsonCsv != null ? JsonCsv.getNomeArquivo() : null,
                     JsonCsv != null ? JsonCsv.getDataHora() : null,
-                    (JsonCsv != null && JsonCsv.getValidos() != null)
-                            ? JsonCsv.getValidos().size()
-                            : 0);
+                    (JsonCsv != null && JsonCsv.getValidos() != null) ? JsonCsv.getValidos().size() : 0);
         } catch (Exception e) {
             System.err.println("Erro ao registrar importação de veículos: " + e.getMessage());
         }
@@ -63,9 +77,7 @@ public class OuvinteCsvParaJson {
 
     @RabbitListener(queues = RabbitConfig.filaManifesto)
     public boolean salvarDadosRebidosManifesto(ResultadoLinhasDoCsv<ManifestoDTO> Jsoncsv) {
-        if (Jsoncsv != null
-                && Jsoncsv.getValidos() != null
-                && !Jsoncsv.getValidos().isEmpty()) {
+        if (Jsoncsv != null && Jsoncsv.getValidos() != null && !Jsoncsv.getValidos().isEmpty()) {
             servicoManifesto.salvarManifestosEmLote(Jsoncsv.getValidos());
         }
         try {
@@ -73,9 +85,7 @@ public class OuvinteCsvParaJson {
                     "MANIFESTOS",
                     Jsoncsv != null ? Jsoncsv.getNomeArquivo() : null,
                     Jsoncsv != null ? Jsoncsv.getDataHora() : null,
-                    (Jsoncsv != null && Jsoncsv.getValidos() != null)
-                            ? Jsoncsv.getValidos().size()
-                            : 0);
+                    (Jsoncsv != null && Jsoncsv.getValidos() != null) ? Jsoncsv.getValidos().size() : 0);
         } catch (Exception e) {
             System.err.println("Erro ao registrar importação de manifestos: " + e.getMessage());
         }
