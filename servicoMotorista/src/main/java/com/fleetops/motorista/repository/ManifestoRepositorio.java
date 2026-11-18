@@ -12,6 +12,9 @@ import org.springframework.data.repository.query.Param;
 public interface ManifestoRepositorio extends JpaRepository<Manifesto, Long> {
     Optional<Manifesto> findFirstByOrderByDataInsertDesc();
 
+    @Query("SELECT m.idManifesto FROM Manifesto m WHERE m.idManifesto IN :ids")
+    List<Long> findExistingIds(@Param("ids") java.util.Collection<Long> ids);
+
     @Query("SELECT m FROM Manifesto m "
             + "JOIN FETCH m.motorista "
             + "JOIN FETCH m.veiculo "

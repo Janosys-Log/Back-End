@@ -17,10 +17,15 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -54,6 +59,156 @@ public class ServicoManifesto {
         return manifestoRepo
                 .findFirstByOrderByDataInsertDesc()
                 .map(manifesto -> new ResponseDate(manifesto.getDataInsert()));
+    }
+
+    @Transactional
+    public int salvarManifestosEmLote(List<ManifestoDTO> manifestos) {
+        if (manifestos == null || manifestos.isEmpty()) {
+            return 0;
+        }
+
+        DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/uuuu").withResolverStyle(ResolverStyle.STRICT);
+
+        // 1. Identificar quais IDs já existem no banco de uma só vez (chunks de 500)
+        Set<Long> idsExistentes = new HashSet<>();
+        List<Long> todosIds = manifestos.stream()
+                .map(ManifestoDTO::getManifestoid)
+                .filter(Objects::nonNull)
+                .toList();
+
+        int chunkSize = 500;
+        for (int i = 0; i < todosIds.size(); i += chunkSize) {
+            List<Long> subIds = todosIds.subList(i, Math.min(i + chunkSize, todosIds.size()));
+            if (!subIds.isEmpty()) {
+                idsExistentes.addAll(manifestoRepo.findExistingIds(subIds));
+            }
+        }
+
+        // 2. Caches locais em memória para evitar ir ao banco a cada linha repetida
+        Map<String, Agregado> cacheAgregadoPorCnpj = new HashMap<>();
+        Map<String, Agregado> cacheAgregadoPorNome = new HashMap<>();
+        Map<String, Veiculo> cacheVeiculoPorPlaca = new HashMap<>();
+        Map<String, Motorista> cacheMotoristaPorCpf = new HashMap<>();
+        Map<String, Motorista> cacheMotoristaPorNome = new HashMap<>();
+
+        List<Manifesto> paraSalvar = new ArrayList<>();
+        Set<Long> idsJaProcessadosNoLote = new HashSet<>();
+
+        for (ManifestoDTO dto : manifestos) {
+            if (dto.getManifestoid() == null) continue;
+            if (idsExistentes.contains(dto.getManifestoid())) continue;
+            if (!idsJaProcessadosNoLote.add(dto.getManifestoid())) continue;
+
+            try {
+                Manifesto manifesto = new Manifesto();
+                manifesto.setIdManifesto(dto.getManifestoid());
+
+                if (dto.getData() != null && !dto.getData().isBlank()) {
+                    manifesto.setDataManifesto(LocalDate.parse(dto.getData(), FMT));
+                }
+                manifesto.setDestino(dto.getDestino());
+
+                BigDecimal freteEmpresa =
+                        dto.getValorfreteempresa() != null ? dto.getValorfreteempresa() : BigDecimal.ZERO;
+                BigDecimal freteAgregado =
+                        dto.getValorfreteagregado() != null ? dto.getValorfreteagregado() : BigDecimal.ZERO;
+                manifesto.setFreteAgregado(freteAgregado);
+                manifesto.setFreteEmpresa(freteEmpresa);
+                manifesto.setValorRecebido(freteEmpresa.subtract(freteAgregado));
+                manifesto.setObservacoes(dto.getObservacoes());
+
+                // Resolve Agregado usando cache em memória
+                Agregado agregado = null;
+                String cnpj = dto.getCnpjagregado();
+                String nomeAgregado = dto.getAgregado();
+
+                if (cnpj != null && !cnpj.isBlank()) {
+                    agregado = cacheAgregadoPorCnpj.get(cnpj);
+                    if (agregado == null) {
+                        agregado = servAgregado.pegarPorCnpj(cnpj);
+                    }
+                }
+                if (agregado == null && nomeAgregado != null && !nomeAgregado.isBlank()) {
+                    agregado = cacheAgregadoPorNome.get(nomeAgregado);
+                    if (agregado == null) {
+                        agregado = servAgregado.pegarPorNome(nomeAgregado);
+                    }
+                }
+                if (agregado == null
+                        && ((nomeAgregado != null && !nomeAgregado.isBlank()) || (cnpj != null && !cnpj.isBlank()))) {
+                    agregado = servAgregado.criarComDadosManifesto(nomeAgregado, cnpj);
+                }
+                if (agregado != null) {
+                    if (cnpj != null && !cnpj.isBlank()) cacheAgregadoPorCnpj.put(cnpj, agregado);
+                    if (nomeAgregado != null && !nomeAgregado.isBlank())
+                        cacheAgregadoPorNome.put(nomeAgregado, agregado);
+                    if (agregado.getNomeAgregado() != null)
+                        cacheAgregadoPorNome.put(agregado.getNomeAgregado(), agregado);
+                }
+                manifesto.setAgregado(agregado);
+
+                // Resolve Veículo usando cache em memória
+                Veiculo veiculo = null;
+                String placa = dto.getPlaca();
+                if (placa != null && !placa.isBlank()) {
+                    veiculo = cacheVeiculoPorPlaca.get(placa);
+                    if (veiculo == null) {
+                        veiculo = sservicoVeiculo.acharPorPlaca(placa);
+                    }
+                    if (veiculo == null) {
+                        veiculo = sservicoVeiculo.criarComPlacaEAgregado(placa, agregado);
+                    }
+                    if (veiculo != null) {
+                        cacheVeiculoPorPlaca.put(placa, veiculo);
+                    }
+                }
+                manifesto.setVeiculo(veiculo);
+
+                // Resolve Motorista usando cache em memória
+                Motorista motorista = null;
+                String cpf = dto.getCpfmotorista();
+                String nomeMotorista = dto.getMotorista();
+
+                if (cpf != null && !cpf.isBlank()) {
+                    motorista = cacheMotoristaPorCpf.get(cpf);
+                    if (motorista == null) {
+                        motorista = servicoMotorista.pegarPorCPF(cpf);
+                    }
+                }
+                if (motorista == null && nomeMotorista != null && !nomeMotorista.isBlank()) {
+                    motorista = cacheMotoristaPorNome.get(nomeMotorista);
+                    if (motorista == null) {
+                        motorista = servicoMotorista.pegarPorNome(nomeMotorista);
+                    }
+                }
+                if (motorista == null
+                        && ((nomeMotorista != null && !nomeMotorista.isBlank()) || (cpf != null && !cpf.isBlank()))) {
+                    motorista = servicoMotorista.criarComDadosManifesto(nomeMotorista, cpf, veiculo, agregado);
+                } else if (motorista != null && motorista.getVeiculo() == null && veiculo != null) {
+                    motorista.setVeiculo(veiculo);
+                    servicoMotorista.salvar(motorista);
+                }
+                if (motorista != null) {
+                    if (cpf != null && !cpf.isBlank()) cacheMotoristaPorCpf.put(cpf, motorista);
+                    if (nomeMotorista != null && !nomeMotorista.isBlank())
+                        cacheMotoristaPorNome.put(nomeMotorista, motorista);
+                    if (motorista.getNomeMotorista() != null)
+                        cacheMotoristaPorNome.put(motorista.getNomeMotorista(), motorista);
+                }
+                manifesto.setMotorista(motorista);
+
+                paraSalvar.add(manifesto);
+
+            } catch (Exception e) {
+                System.err.println("Erro ao preparar manifesto " + dto.getManifestoid() + ": " + e.getMessage());
+            }
+        }
+
+        if (!paraSalvar.isEmpty()) {
+            manifestoRepo.saveAll(paraSalvar);
+        }
+
+        return paraSalvar.size();
     }
 
     public void SalvaOuNaoNoBancoComAsInformacoesDoManifesto(ManifestoDTO manifesto) {
