@@ -1,6 +1,7 @@
 package com.fleetops.motorista.controller;
 
 import com.fleetops.motorista.domain.Manifesto;
+import com.fleetops.motorista.dto.DashboardOperacionalDTO;
 import com.fleetops.motorista.dto.ManifestoDTO;
 import com.fleetops.motorista.dto.ManifestoOperacionalDTO;
 import com.fleetops.motorista.dto.RentabilidadeDTO;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -90,5 +92,11 @@ public class ManifestoController {
         HashMap<Integer, RentabilidadeDTO> dadosDeAcordoComAsDatas =
                 servico.RentabilidadeNoUltimosMesesGrandeSp(inicio, fim);
         return ResponseEntity.ok(dadosDeAcordoComAsDatas);
+    }
+
+    @GetMapping("/dashboardOperacional")
+    public ResponseEntity<DashboardOperacionalDTO> obterDashboardOperacional(
+            @RequestParam(required = false) String mes) {
+        return ResponseEntity.ok(servico.obterDashboardOperacional(mes));
     }
 }
