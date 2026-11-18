@@ -28,6 +28,9 @@ public class ManifestoController {
     @Autowired
     private ServicoManifesto servico;
 
+    @Autowired
+    private com.fleetops.motorista.service.ServicoRegistroImportacao servicoRegistroImportacao;
+
     @GetMapping
     public List<?> listarTodos(Authentication authentication) {
         boolean gerencia = ehGerencia(authentication);
@@ -54,7 +57,19 @@ public class ManifestoController {
 
     @GetMapping("/dataDoUltimoManifesto")
     public ResponseEntity<ResponseDate> buscarDataUltimoManifesto() {
-        return servico.buscarDataUltimoManifesto()
+        return servicoRegistroImportacao
+                .buscarUltimaImportacao(null)
+                .or(() -> servico.buscarDataUltimoManifesto())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/ultimaImportacao")
+    public ResponseEntity<ResponseDate> buscarUltimaImportacao(
+            @RequestParam(value = "tipo", required = false) String tipo) {
+        return servicoRegistroImportacao
+                .buscarUltimaImportacao(tipo)
+                .or(() -> servico.buscarDataUltimoManifesto())
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

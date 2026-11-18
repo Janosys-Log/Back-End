@@ -7,6 +7,7 @@ import com.fleetops.motorista.ouvinte.dto.response.VeiculoDTO;
 import com.fleetops.motorista.service.ServicoAgregado;
 import com.fleetops.motorista.service.ServicoManifesto;
 import com.fleetops.motorista.service.ServicoMotorista;
+import com.fleetops.motorista.service.ServicoRegistroImportacao;
 import com.fleetops.motorista.service.ServicoVeiculo;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,9 @@ public class OuvinteCsvParaJson {
     @Autowired
     private ServicoManifesto servicoManifesto;
 
+    @Autowired
+    private ServicoRegistroImportacao servicoRegistroImportacao;
+
     @RabbitListener(queues = RabbitConfig.filaVeiculo)
     public boolean salvarDadosRebidos(ResultadoLinhasDoCsv<VeiculoDTO> JsonCsv) {
         for (VeiculoDTO veiculo : JsonCsv.getValidos()) {
@@ -33,7 +37,12 @@ public class OuvinteCsvParaJson {
             servicoVeiculo.SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(veiculo);
             servicoMotorista.SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(veiculo);
         }
-        System.out.println("Arquivo Gravado");
+        servicoRegistroImportacao.registrarImportacao(
+                "VEICULOS",
+                JsonCsv.getNomeArquivo(),
+                JsonCsv.getDataHora(),
+                JsonCsv.getValidos() != null ? JsonCsv.getValidos().size() : 0);
+        System.out.println("Arquivo de Veículos Gravado");
         return true;
     }
 
@@ -42,7 +51,12 @@ public class OuvinteCsvParaJson {
         for (ManifestoDTO manifesto : Jsoncsv.getValidos()) {
             servicoManifesto.SalvaOuNaoNoBancoComAsInformacoesDoManifesto(manifesto);
         }
-        System.out.println("Arquivo Gravado");
+        servicoRegistroImportacao.registrarImportacao(
+                "MANIFESTOS",
+                Jsoncsv.getNomeArquivo(),
+                Jsoncsv.getDataHora(),
+                Jsoncsv.getValidos() != null ? Jsoncsv.getValidos().size() : 0);
+        System.out.println("Arquivo de Manifestos Gravado");
         return true;
     }
 }
