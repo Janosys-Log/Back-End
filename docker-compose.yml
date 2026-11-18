@@ -73,7 +73,7 @@ services:
         condition: service_healthy
     environment:
       SERVER_PORT: 8083
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/veiculo?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/veiculo?createDatabaseIfNotExist=true&rewriteBatchedStatements=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_RABBITMQ_HOST: rabbitmq
