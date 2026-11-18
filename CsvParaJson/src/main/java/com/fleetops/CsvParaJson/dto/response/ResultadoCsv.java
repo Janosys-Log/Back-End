@@ -4,6 +4,8 @@ public class ResultadoCsv<T, K> {
     private ResultadoLinhasDoCsv<T> resultadoLinhasDoCsv;
     private ResultadoLinhasDoCsv<K> resultadoLinhasDoCsv2;
 
+    public ResultadoCsv() {}
+
     public ResultadoCsv(ResultadoLinhasDoCsv<T> resultado1, ResultadoLinhasDoCsv<K> resultado2) {
         this.resultadoLinhasDoCsv = resultado1;
         this.resultadoLinhasDoCsv2 = resultado2;
@@ -23,5 +25,13 @@ public class ResultadoCsv<T, K> {
 
     public void setResultadoLinhasDoCsv2(ResultadoLinhasDoCsv<K> resultadoLinhasDoCsv2) {
         this.resultadoLinhasDoCsv2 = resultadoLinhasDoCsv2;
+    }
+
+    public ResultadoLinhasDoCsv<T> getVeiculos() {
+        return resultadoLinhasDoCsv;
+    }
+
+    public ResultadoLinhasDoCsv<K> getManifestos() {
+        return resultadoLinhasDoCsv2;
     }
 }
