@@ -108,6 +108,8 @@ services:
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: rabbit
       SPRING_RABBITMQ_PASSWORD: rabbit
+      SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: 50MB
+      SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: 50MB
       APP_SECURITY_JWT_SECRET: ${JWT_SECRET:-janosys_super_secret_jwt_key_development_32bytes}
       JAVA_TOOL_OPTIONS: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
     restart: on-failure
