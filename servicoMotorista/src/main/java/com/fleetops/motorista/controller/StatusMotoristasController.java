@@ -1,13 +1,19 @@
 package com.fleetops.motorista.controller;
 
+import com.fleetops.motorista.dto.ContatoMotoristaDTO;
 import com.fleetops.motorista.dto.StatusDTO;
+import com.fleetops.motorista.service.ServicoContatoMotorista;
 import com.fleetops.motorista.service.StatusMotoristasService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.Map;
+import java.util.Optional;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,9 +33,11 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Status do Motorista", description = "Endpoints para registro e atualização do status do motorista")
 public class StatusMotoristasController {
     private final StatusMotoristasService motoristaService;
+    private final ServicoContatoMotorista servicoContato;
 
-    StatusMotoristasController(StatusMotoristasService service) {
+    StatusMotoristasController(StatusMotoristasService service, ServicoContatoMotorista servicoContato) {
         this.motoristaService = service;
+        this.servicoContato = servicoContato;
     }
 
     @PutMapping("/updateStatus")
@@ -54,7 +62,17 @@ public class StatusMotoristasController {
         @ApiResponse(responseCode = "404", description = "Motorista não encontrado"),
         @ApiResponse(responseCode = "409", description = "Manifesto já está em uso por outro motorista em rota")
     })
-    public ResponseEntity<Void> atualizaStatusMotorista(@Valid @RequestBody StatusDTO statusDTO) {
+    public ResponseEntity<?> atualizaStatusMotorista(
+            @Valid @RequestBody StatusDTO statusDTO, Authentication authentication) {
+        if (authentication != null && statusDTO.getMotoristaId() != null) {
+            Optional<ContatoMotoristaDTO> contato = servicoContato.obterContatoAtivo(statusDTO.getMotoristaId());
+            if (contato.isPresent() && !contato.get().email().equalsIgnoreCase(authentication.getName())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of(
+                                "erro",
+                                "Motorista em contato com " + contato.get().nome() + " — aguarde a liberação."));
+            }
+        }
         motoristaService.atualizaStatusMotorista(statusDTO);
         return ResponseEntity.noContent().build();
     }

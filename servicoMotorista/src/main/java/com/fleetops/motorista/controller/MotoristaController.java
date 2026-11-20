@@ -2,19 +2,26 @@ package com.fleetops.motorista.controller;
 
 import com.fleetops.motorista.domain.Motorista;
 import com.fleetops.motorista.domain.StatusMotorista;
+import com.fleetops.motorista.dto.ContatoMotoristaDTO;
 import com.fleetops.motorista.dto.MotoristaDTO;
 import com.fleetops.motorista.dto.MotoristaOperacionalDTO;
 import com.fleetops.motorista.dto.MotoristaRendimentoDTO;
+import com.fleetops.motorista.service.ServicoContatoMotorista;
 import com.fleetops.motorista.service.ServicoMotorista;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,6 +32,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class MotoristaController {
     @Autowired
     private ServicoMotorista servico;
+
+    @Autowired
+    private ServicoContatoMotorista servicoContato;
 
     @GetMapping
     public ResponseEntity<List<?>> listar(
@@ -60,8 +70,9 @@ public class MotoristaController {
     }
 
     private static boolean ehGerencia(Authentication authentication) {
-        return authentication != null && authentication.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_GERENCIA".equals(authority.getAuthority()));
+        return authentication != null
+                && authentication.getAuthorities().stream()
+                        .anyMatch(authority -> "ROLE_GERENCIA".equals(authority.getAuthority()));
     }
 
     @GetMapping("/rankingPorData/{inicio}/{fim}")
@@ -78,5 +89,36 @@ public class MotoristaController {
             @PathVariable LocalDate inicio, @PathVariable LocalDate fim) {
 
         return ResponseEntity.ok(servico.rankingMotoristaGrandeSp(inicio, fim));
+    }
+
+    @GetMapping("/contatos")
+    public ResponseEntity<Map<Long, ContatoMotoristaDTO>> listarContatosAtivos() {
+        return ResponseEntity.ok(servicoContato.listarContatosAtivos());
+    }
+
+    @PostMapping("/{id}/contato")
+    public ResponseEntity<ContatoMotoristaDTO> adquirirContato(
+            @PathVariable Long id, Authentication authentication, HttpServletRequest request) {
+        String email = authentication.getName();
+        Object nomeAttr = request.getAttribute("usuarioNome");
+        String nome = (nomeAttr instanceof String s && !s.isBlank()) ? s : email;
+
+        ServicoContatoMotorista.ResultadoLock resultado = servicoContato.adquirirOuRenovar(id, email, nome);
+        if (resultado.adquirido()) {
+            return ResponseEntity.ok(resultado.contato());
+        }
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(resultado.contato());
+    }
+
+    @DeleteMapping("/{id}/contato")
+    public ResponseEntity<Void> liberarContato(@PathVariable Long id, Authentication authentication) {
+        servicoContato.liberar(id, authentication.getName());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/contatos/meus")
+    public ResponseEntity<Void> liberarMeusContatos(Authentication authentication) {
+        servicoContato.liberarTodosDoUsuario(authentication.getName());
+        return ResponseEntity.noContent().build();
     }
 }
