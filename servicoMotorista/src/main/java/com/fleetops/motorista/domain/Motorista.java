@@ -68,6 +68,9 @@ public class Motorista {
     @Column(name = "manifesto_atual")
     private Long manifestoAtual;
 
+    @Column(name = "data_ultimo_manifesto")
+    private java.time.LocalDate dataUltimoManifesto;
+
     @Column(name = "contador_rota_sp")
     @Builder.Default
     private Integer contadorRotaSp = 0;
@@ -97,6 +100,9 @@ public class Motorista {
     public void atualizaStatus(StatusMotorista novoStatus) {
         if (novoStatus == StatusMotorista.Em_Rota) {
             throw new IllegalArgumentException("Para entrar em rota use iniciarRota(numeroManifesto)");
+        }
+        if (this.status == StatusMotorista.Em_Rota) {
+            this.dataUltimoManifesto = java.time.LocalDate.now(java.time.ZoneId.of("America/Sao_Paulo"));
         }
         registrarStatus(novoStatus, null);
     }

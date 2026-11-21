@@ -5,6 +5,7 @@ import com.fleetops.motorista.domain.StatusMotorista;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public record MotoristaDTO(
@@ -19,6 +20,7 @@ public record MotoristaDTO(
         StatusMotorista status,
         LocalDateTime statusUpdatedAt,
         Long manifestoAtual,
+        LocalDate dataUltimoManifesto,
         Integer contadorRotaSp,
         Float notaMedia,
         VeiculoDTO veiculo,
@@ -33,6 +35,7 @@ public record MotoristaDTO(
                 motorista.getStatus(),
                 motorista.getStatusUpdatedAt(),
                 motorista.getManifestoAtual(),
+                motorista.getDataUltimoManifesto(),
                 motorista.getContadorRotaSp(),
                 motorista.getNotaMedia(),
                 motorista.getVeiculo() != null ? VeiculoDTO.fromEntity(motorista.getVeiculo()) : null,
@@ -48,6 +51,7 @@ public record MotoristaDTO(
                 .status(this.status != null ? this.status : StatusMotorista.Disponivel)
                 .statusUpdatedAt(this.statusUpdatedAt)
                 .manifestoAtual(this.manifestoAtual)
+                .dataUltimoManifesto(this.dataUltimoManifesto)
                 .contadorRotaSp(this.contadorRotaSp != null ? this.contadorRotaSp : 0)
                 .notaMedia(this.notaMedia != null ? this.notaMedia : 0.0f)
                 .veiculo(this.veiculo != null ? this.veiculo.toEntity() : null)
