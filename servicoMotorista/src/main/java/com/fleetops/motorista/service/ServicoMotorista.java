@@ -50,9 +50,19 @@ public class ServicoMotorista {
         return motoristaRepo.findById(id);
     }
 
-    public Optional<Motorista> atualizarContato(Long id, String contatoMotorista) {
+    public Optional<Motorista> atualizarContato(Long id, com.fleetops.motorista.dto.AtualizarContatoDTO dto) {
         return motoristaRepo.findById(id).map(motorista -> {
-            motorista.setContatoMotorista(contatoMotorista.trim());
+            motorista.setContatoMotorista(dto.contatoMotorista().trim());
+            motorista.setTipoContato(dto.tipoContato());
+            String secundario =
+                    dto.contatoSecundario() != null ? dto.contatoSecundario().trim() : null;
+            if (secundario != null && !secundario.isEmpty()) {
+                motorista.setContatoSecundario(secundario);
+                motorista.setTipoContatoSecundario(dto.tipoContatoSecundario());
+            } else {
+                motorista.setContatoSecundario(null);
+                motorista.setTipoContatoSecundario(null);
+            }
             return motoristaRepo.save(motorista);
         });
     }
