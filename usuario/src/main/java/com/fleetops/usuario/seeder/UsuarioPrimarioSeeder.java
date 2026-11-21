@@ -28,7 +28,7 @@ public class UsuarioPrimarioSeeder implements CommandLineRunner {
     @Value("${app.security.admin.email:admin@janosys.com}")
     private String adminEmail;
 
-    @Value("${app.security.admin.password:Admin@123456}")
+    @Value("${app.security.admin.password:admin123}")
     private String adminPassword;
 
     public UsuarioPrimarioSeeder(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
