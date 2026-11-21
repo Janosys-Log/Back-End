@@ -46,7 +46,8 @@ public class CsvParaJson<T> {
 
         ResultadoLinhasDoCsv<T> resultado = validador.Validar(objetos);
         resultado.setNomeArquivo(arquivo.getOriginalFilename());
-        resultado.setDataHora(java.time.LocalDateTime.now().toString());
+        resultado.setDataHora(java.time.LocalDateTime.now(java.time.ZoneId.of("America/Sao_Paulo"))
+                .toString());
 
         Boolean funcionou = rabbitmq.convertSendAndReceiveAsType(
                 RabbitConfig.Exchange, filaParaEnviar, resultado, new ParameterizedTypeReference<Boolean>() {});

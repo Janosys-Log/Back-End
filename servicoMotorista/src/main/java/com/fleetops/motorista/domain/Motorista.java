@@ -104,6 +104,6 @@ public class Motorista {
     private void registrarStatus(StatusMotorista novoStatus, Long numeroManifesto) {
         this.status = novoStatus;
         this.manifestoAtual = numeroManifesto;
-        this.statusUpdatedAt = LocalDateTime.now();
+        this.statusUpdatedAt = LocalDateTime.now(java.time.ZoneId.of("America/Sao_Paulo"));
     }
 }
