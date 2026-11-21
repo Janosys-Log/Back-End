@@ -49,6 +49,18 @@ public class Motorista {
     @Column(name = "contato_motorista", length = 20, nullable = false)
     private String contatoMotorista;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_contato", length = 30)
+    private TipoContato tipoContato;
+
+    @Size(max = 20, message = "O contato secundário deve ter no máximo 20 caracteres")
+    @Column(name = "contato_secundario", length = 20)
+    private String contatoSecundario;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_contato_secundario", length = 30)
+    private TipoContato tipoContatoSecundario;
+
     /**
      * Status atual do motorista (obrigatório).
      */

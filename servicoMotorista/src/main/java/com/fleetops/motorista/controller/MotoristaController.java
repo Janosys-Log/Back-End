@@ -140,7 +140,7 @@ public class MotoristaController {
             }
         }
         boolean gerencia = ehGerencia(authentication);
-        return servico.atualizarContato(id, dto.contatoMotorista())
+        return servico.atualizarContato(id, dto)
                 .<ResponseEntity<?>>map(motorista -> ResponseEntity.ok(paraPerfil(motorista, gerencia)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

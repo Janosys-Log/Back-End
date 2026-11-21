@@ -2,6 +2,7 @@ package com.fleetops.motorista.dto;
 
 import com.fleetops.motorista.domain.Motorista;
 import com.fleetops.motorista.domain.StatusMotorista;
+import com.fleetops.motorista.domain.TipoContato;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -11,6 +12,9 @@ public record MotoristaOperacionalDTO(
         String nomeMotorista,
         String cpfMotorista,
         String contatoMotorista,
+        TipoContato tipoContato,
+        String contatoSecundario,
+        TipoContato tipoContatoSecundario,
         StatusMotorista status,
         LocalDateTime statusUpdatedAt,
         Long manifestoAtual,
@@ -25,6 +29,9 @@ public record MotoristaOperacionalDTO(
                 motorista.getNomeMotorista(),
                 motorista.getCpfMotorista(),
                 motorista.getContatoMotorista(),
+                motorista.getTipoContato(),
+                motorista.getContatoSecundario(),
+                motorista.getTipoContatoSecundario(),
                 motorista.getStatus(),
                 motorista.getStatusUpdatedAt(),
                 motorista.getManifestoAtual(),
