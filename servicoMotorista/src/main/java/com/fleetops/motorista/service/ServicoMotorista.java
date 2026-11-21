@@ -50,6 +50,13 @@ public class ServicoMotorista {
         return motoristaRepo.findById(id);
     }
 
+    public Optional<Motorista> atualizarContato(Long id, String contatoMotorista) {
+        return motoristaRepo.findById(id).map(motorista -> {
+            motorista.setContatoMotorista(contatoMotorista.trim());
+            return motoristaRepo.save(motorista);
+        });
+    }
+
     public Motorista pegarPorCPF(String cpf) {
         if (cpf == null || cpf.isBlank()) {
             return null;
