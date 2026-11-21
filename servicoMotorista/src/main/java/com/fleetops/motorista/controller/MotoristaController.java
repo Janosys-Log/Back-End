@@ -2,6 +2,7 @@ package com.fleetops.motorista.controller;
 
 import com.fleetops.motorista.domain.Motorista;
 import com.fleetops.motorista.domain.StatusMotorista;
+import com.fleetops.motorista.dto.AtualizarContatoDTO;
 import com.fleetops.motorista.dto.ContatoMotoristaDTO;
 import com.fleetops.motorista.dto.MotoristaDTO;
 import com.fleetops.motorista.dto.MotoristaOperacionalDTO;
@@ -9,9 +10,11 @@ import com.fleetops.motorista.dto.MotoristaRendimentoDTO;
 import com.fleetops.motorista.service.ServicoContatoMotorista;
 import com.fleetops.motorista.service.ServicoMotorista;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +25,8 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -120,5 +125,23 @@ public class MotoristaController {
     public ResponseEntity<Void> liberarMeusContatos(Authentication authentication) {
         servicoContato.liberarTodosDoUsuario(authentication.getName());
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/telefone")
+    public ResponseEntity<?> atualizarTelefone(
+            @PathVariable Long id, @Valid @RequestBody AtualizarContatoDTO dto, Authentication authentication) {
+        if (authentication != null) {
+            Optional<ContatoMotoristaDTO> contato = servicoContato.obterContatoAtivo(id);
+            if (contato.isPresent() && !contato.get().email().equalsIgnoreCase(authentication.getName())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of(
+                                "erro",
+                                "Motorista em contato com " + contato.get().nome() + " — aguarde a liberação."));
+            }
+        }
+        boolean gerencia = ehGerencia(authentication);
+        return servico.atualizarContato(id, dto.contatoMotorista())
+                .<ResponseEntity<?>>map(motorista -> ResponseEntity.ok(paraPerfil(motorista, gerencia)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
