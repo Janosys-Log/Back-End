@@ -12,7 +12,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "registro_importacao")
@@ -33,7 +32,6 @@ public class RegistroImportacao {
     @Column(name = "nome_arquivo", nullable = false)
     private String nomeArquivo;
 
-    @CreationTimestamp
     @Column(name = "data_hora", nullable = false)
     private LocalDateTime dataHora;
 
