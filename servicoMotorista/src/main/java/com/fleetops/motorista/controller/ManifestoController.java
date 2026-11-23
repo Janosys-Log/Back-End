@@ -34,7 +34,9 @@ public class ManifestoController {
     @GetMapping
     public List<?> listarTodos(Authentication authentication) {
         boolean gerencia = ehGerencia(authentication);
-        return servico.listarTodos().stream().map(manifesto -> paraPerfil(manifesto, gerencia)).toList();
+        return servico.listarTodos().stream()
+                .map(manifesto -> paraPerfil(manifesto, gerencia))
+                .toList();
     }
 
     @GetMapping("/{id}")
@@ -51,8 +53,9 @@ public class ManifestoController {
     }
 
     private static boolean ehGerencia(Authentication authentication) {
-        return authentication != null && authentication.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_GERENCIA".equals(authority.getAuthority()));
+        return authentication != null
+                && authentication.getAuthorities().stream()
+                        .anyMatch(authority -> "ROLE_GERENCIA".equals(authority.getAuthority()));
     }
 
     @GetMapping("/dataDoUltimoManifesto")
