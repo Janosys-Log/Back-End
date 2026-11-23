@@ -45,6 +45,9 @@ public class CsvParaJson<T> {
         List<T> objetos = this.LerCsv(arquivo, tipo);
 
         ResultadoLinhasDoCsv<T> resultado = validador.Validar(objetos);
+        resultado.setNomeArquivo(arquivo.getOriginalFilename());
+        resultado.setDataHora(java.time.LocalDateTime.now(java.time.ZoneId.of("America/Sao_Paulo"))
+                .toString());
 
         Boolean funcionou = rabbitmq.convertSendAndReceiveAsType(
                 RabbitConfig.Exchange, filaParaEnviar, resultado, new ParameterizedTypeReference<Boolean>() {});
@@ -83,8 +86,9 @@ public class CsvParaJson<T> {
             throw new NaoFoiPossivelAcharEncoding(
                     "A leitura desse arquivo falhou", "Não foi possivel encontrar o encoding");
         }
-        ;
-        System.out.println(encoding);
+        if (encoding == null || encoding.isBlank()) {
+            encoding = "UTF-8";
+        }
         try (Reader reader = new InputStreamReader(arquivo.getInputStream(), Charset.forName(encoding))) {
             parser.parse(reader);
         } catch (IOException e) {

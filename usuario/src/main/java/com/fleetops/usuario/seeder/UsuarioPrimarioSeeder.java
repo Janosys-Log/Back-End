@@ -28,7 +28,7 @@ public class UsuarioPrimarioSeeder implements CommandLineRunner {
     @Value("${app.security.admin.email:admin@janosys.com}")
     private String adminEmail;
 
-    @Value("${app.security.admin.password:Admin@123456}")
+    @Value("${app.security.admin.password:admin123}")
     private String adminPassword;
 
     public UsuarioPrimarioSeeder(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
@@ -54,6 +54,29 @@ public class UsuarioPrimarioSeeder implements CommandLineRunner {
             log.info(">>> Usuário primário criado com sucesso: {} (Perfil: {}) <<<", adminEmail, PerfilAcesso.GERENCIA);
         } else {
             log.info(">>> Usuário primário já existe no banco: {} (Ignorando seed) <<<", adminEmail);
+        }
+
+        criarOperadorSeAusente("Operador 1", "operador1", "operador1@janosys.com", "operador123");
+        criarOperadorSeAusente("Operador 2", "operador2", "operador2@janosys.com", "operador123");
+    }
+
+    private void criarOperadorSeAusente(String nome, String login, String email, String senha) {
+        if (usuarioRepository.findByEmailUsuario(email).isEmpty()) {
+            Usuario operador = Usuario.builder()
+                    .nomeUsuario(nome)
+                    .emailUsuario(email)
+                    .loginUsuario(login)
+                    .senhaUsuario(passwordEncoder.encode(senha))
+                    .perfilAcesso(PerfilAcesso.OPERACIONAL)
+                    .papel(Papel.OPERADOR_LOGISTICO)
+                    .primario(false)
+                    .ativo(true)
+                    .build();
+
+            usuarioRepository.save(operador);
+            log.info(">>> Operador criado com sucesso: {} (Perfil: {}) <<<", email, PerfilAcesso.OPERACIONAL);
+        } else {
+            log.info(">>> Operador já existe no banco: {} (Ignorando seed) <<<", email);
         }
     }
 }

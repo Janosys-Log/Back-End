@@ -2,9 +2,11 @@ package com.fleetops.motorista.dto;
 
 import com.fleetops.motorista.domain.Motorista;
 import com.fleetops.motorista.domain.StatusMotorista;
+import com.fleetops.motorista.domain.TipoContato;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public record MotoristaDTO(
@@ -16,9 +18,13 @@ public record MotoristaDTO(
                 @Size(max = 11, message = "O CPF deve ter no máximo 11 dígitos numéricos")
                 String cpfMotorista,
         @Size(max = 20, message = "O contato deve ter no máximo 20 caracteres") String contatoMotorista,
+        TipoContato tipoContato,
+        @Size(max = 20, message = "O contato secundário deve ter no máximo 20 caracteres") String contatoSecundario,
+        TipoContato tipoContatoSecundario,
         StatusMotorista status,
         LocalDateTime statusUpdatedAt,
         Long manifestoAtual,
+        LocalDate dataUltimoManifesto,
         Integer contadorRotaSp,
         Float notaMedia,
         VeiculoDTO veiculo,
@@ -30,9 +36,13 @@ public record MotoristaDTO(
                 motorista.getNomeMotorista(),
                 motorista.getCpfMotorista(),
                 motorista.getContatoMotorista(),
+                motorista.getTipoContato(),
+                motorista.getContatoSecundario(),
+                motorista.getTipoContatoSecundario(),
                 motorista.getStatus(),
                 motorista.getStatusUpdatedAt(),
                 motorista.getManifestoAtual(),
+                motorista.getDataUltimoManifesto(),
                 motorista.getContadorRotaSp(),
                 motorista.getNotaMedia(),
                 motorista.getVeiculo() != null ? VeiculoDTO.fromEntity(motorista.getVeiculo()) : null,
@@ -45,9 +55,13 @@ public record MotoristaDTO(
                 .nomeMotorista(this.nomeMotorista)
                 .cpfMotorista(this.cpfMotorista)
                 .contatoMotorista(this.contatoMotorista)
+                .tipoContato(this.tipoContato)
+                .contatoSecundario(this.contatoSecundario)
+                .tipoContatoSecundario(this.tipoContatoSecundario)
                 .status(this.status != null ? this.status : StatusMotorista.Disponivel)
                 .statusUpdatedAt(this.statusUpdatedAt)
                 .manifestoAtual(this.manifestoAtual)
+                .dataUltimoManifesto(this.dataUltimoManifesto)
                 .contadorRotaSp(this.contadorRotaSp != null ? this.contadorRotaSp : 0)
                 .notaMedia(this.notaMedia != null ? this.notaMedia : 0.0f)
                 .veiculo(this.veiculo != null ? this.veiculo.toEntity() : null)

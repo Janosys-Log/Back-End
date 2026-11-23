@@ -20,14 +20,14 @@ public class ManifestoDTO {
     @Pattern(regexp = "[\\p{L} ]+", message = "O campo 'Motorista' só podeter letras,espaços e acentos")
     private String motorista;
 
-    @Pattern(regexp = "^\\d{3}\\.?\\d{3}\\.?\\d{3}\\d{2}$", message = "Formato de do campo 'CPF Motorista' inválido")
+    @NotBlank(message = "A linha precisa ter o campo 'CPF Motorista' preenchido")
+    @Pattern(regexp = "^\\d{11}$", message = "Formato do campo 'CPF Motorista' inválido")
     private String cpfmotorista;
 
     @NotBlank(message = "A linha Precisa ter um campo 'Agragado' preenchido")
-    @Pattern(regexp = "^[^0-9]*$", message = "O campo Agragado não pode conter números")
     private String agregado;
 
-    @Pattern(regexp = "^[A-Z0-9]{12}\\d{2}$", message = "Formato do campo 'CNPJ (agregado)' inválido")
+    @Pattern(regexp = "^[A-Z0-9]{11,14}$", message = "Formato do campo 'CNPJ (agregado)' inválido")
     private String cnpjagregado;
 
     @NotBlank(message = "A linha precisa ter um campo 'Placa' preenchido")
@@ -37,18 +37,17 @@ public class ManifestoDTO {
     private String placa;
 
     @NotBlank(message = "A linha precisa ter um campo 'Destino' preenchido")
-    @Pattern(regexp = "[\\p{L} ]+", message = "O campo 'Destino' só aceita letras(com  acentos) e espaços")
     private String destino;
 
     @NotBlank(message = "A linha precisa ter um campo 'Valor Frete(agregado)'")
     @Pattern(
-            regexp = "\\d{1,3}(\\.\\d{3})*,\\d{2}",
+            regexp = "^\\d{1,3}(\\.\\d{3})*(,\\d{1,2})?$|^\\d+(,\\d{1,2})?$",
             message = "O campo 'Valor Frete(agregado)' só aceita o formato da moeda brasileira")
     private String valorfreteagregado;
 
     @NotBlank(message = "A linha precisa ter um campo 'Valor Frete(empresa)'")
     @Pattern(
-            regexp = "\\d{1,3}(\\.\\d{3})*,\\d{2}",
+            regexp = "^\\d{1,3}(\\.\\d{3})*(,\\d{1,2})?$|^\\d+(,\\d{1,2})?$",
             message = "O campo 'Valor Frete(empresa)' só aceita o formato da moeda brasileira")
     private String valorfreteempresa;
 

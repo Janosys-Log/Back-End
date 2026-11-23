@@ -10,11 +10,13 @@ public class VeiculoDTO {
 
     @NotBlank(message = "O Veiculo Precisa ter uma Placa")
     @NotNull(message = "Placa Precisa ter Valor")
+    @Pattern(
+            regexp = "^[A-Z0-9]{7}$",
+            message = "A placa deve ter exatamente 7 caracteres (letras e números, sem hífen, barra ou espaços)")
     private String placa;
 
-    @NotBlank(message = "O Veiculo Precisa ter um  Agragado")
+    @NotBlank(message = "O Veiculo Precisa ter um Agragado")
     @NotNull(message = "Agragado Precisa ter valor")
-    @Pattern(regexp = "^[^0-9]*$", message = "O campo Agragado não pode conter números")
     private String agregado;
 
     @NotBlank(message = "O Veiculo Precisa ter um Status")
@@ -24,14 +26,11 @@ public class VeiculoDTO {
 
     @NotBlank(message = "O Veiculo Precisa ter um Motorista")
     @NotNull(message = "O Motorista precisa ter valor")
-    @Pattern(regexp = "^[^0-9]*$", message = "O campo Motorista não pode conter números")
     private String motorista;
 
-    @NotBlank(message = "O Veiculo Precisa ter um Tipo")
-    @NotNull(message = "TipoVeiculo Precisa ter valor")
-    @Pattern(regexp = "^[^0-9]*$", message = "O campo TipoVeiculo não pode conter números")
     private TipoVeiculo tipoVeiculo;
 
+    @NotNull(message = "A linha precisa ter um campo 'Subtipo Veículo'")
     private SubtipoVeiculo subtipoVeiculo;
 
     private String cpfmotorista;
@@ -84,8 +83,15 @@ public class VeiculoDTO {
         status = Status;
     }
 
+    @NotNull(message = "O Veiculo Precisa ter um Tipo")
     public TipoVeiculo getTipoVeiculo() {
-        return tipoVeiculo;
+        if (tipoVeiculo != null) {
+            return tipoVeiculo;
+        }
+        if (subtipoVeiculo != null) {
+            return subtipoVeiculo.getTipo();
+        }
+        return null;
     }
 
     public void setTipoVeiculo(TipoVeiculo TipoVeiculo) {
@@ -98,6 +104,9 @@ public class VeiculoDTO {
 
     public void setSubtipoVeiculo(SubtipoVeiculo subtipoVeiculo) {
         this.subtipoVeiculo = subtipoVeiculo;
+        if (subtipoVeiculo != null && this.tipoVeiculo == null) {
+            this.tipoVeiculo = subtipoVeiculo.getTipo();
+        }
     }
 
     public String getCnpjagregado() {

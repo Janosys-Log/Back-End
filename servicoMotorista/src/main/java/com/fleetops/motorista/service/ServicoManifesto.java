@@ -1,7 +1,13 @@
 package com.fleetops.motorista.service;
 
+import com.fleetops.motorista.domain.Agregado;
 import com.fleetops.motorista.domain.Manifesto;
+import com.fleetops.motorista.domain.Motorista;
 import com.fleetops.motorista.domain.RendimentoMensal;
+import com.fleetops.motorista.domain.Veiculo;
+import com.fleetops.motorista.dto.CardsCustoDTO;
+import com.fleetops.motorista.dto.CustoOperacionalDTO;
+import com.fleetops.motorista.dto.ManifestoDestaqueDTO;
 import com.fleetops.motorista.dto.RentabilidadeDTO;
 import com.fleetops.motorista.dto.ResponseDate;
 import com.fleetops.motorista.ouvinte.dto.response.ManifestoDTO;
@@ -12,12 +18,19 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
@@ -49,17 +62,171 @@ public class ServicoManifesto {
                 .map(manifesto -> new ResponseDate(manifesto.getDataInsert()));
     }
 
+    @Transactional
+    public int salvarManifestosEmLote(List<ManifestoDTO> manifestos) {
+        if (manifestos == null || manifestos.isEmpty()) {
+            return 0;
+        }
+
+        DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/uuuu").withResolverStyle(ResolverStyle.STRICT);
+
+        // 1. Identificar quais IDs já existem no banco de uma só vez (chunks de 500)
+        Set<Long> idsExistentes = new HashSet<>();
+        List<Long> todosIds = manifestos.stream()
+                .map(ManifestoDTO::getManifestoid)
+                .filter(Objects::nonNull)
+                .toList();
+
+        int chunkSize = 500;
+        for (int i = 0; i < todosIds.size(); i += chunkSize) {
+            List<Long> subIds = todosIds.subList(i, Math.min(i + chunkSize, todosIds.size()));
+            if (!subIds.isEmpty()) {
+                idsExistentes.addAll(manifestoRepo.findExistingIds(subIds));
+            }
+        }
+
+        // 2. Caches locais em memória para evitar ir ao banco a cada linha repetida
+        Map<String, Agregado> cacheAgregadoPorCnpj = new HashMap<>();
+        Map<String, Agregado> cacheAgregadoPorNome = new HashMap<>();
+        Map<String, Veiculo> cacheVeiculoPorPlaca = new HashMap<>();
+        Map<String, Motorista> cacheMotoristaPorCpf = new HashMap<>();
+        Map<String, Motorista> cacheMotoristaPorNome = new HashMap<>();
+
+        List<Manifesto> paraSalvar = new ArrayList<>();
+        Set<Long> idsJaProcessadosNoLote = new HashSet<>();
+
+        for (ManifestoDTO dto : manifestos) {
+            if (dto.getManifestoid() == null) continue;
+            if (idsExistentes.contains(dto.getManifestoid())) continue;
+            if (!idsJaProcessadosNoLote.add(dto.getManifestoid())) continue;
+
+            try {
+                Manifesto manifesto = new Manifesto();
+                manifesto.setIdManifesto(dto.getManifestoid());
+
+                if (dto.getData() != null && !dto.getData().isBlank()) {
+                    manifesto.setDataManifesto(LocalDate.parse(dto.getData(), FMT));
+                }
+                manifesto.setDestino(dto.getDestino());
+
+                BigDecimal freteEmpresa =
+                        dto.getValorfreteempresa() != null ? dto.getValorfreteempresa() : BigDecimal.ZERO;
+                BigDecimal freteAgregado =
+                        dto.getValorfreteagregado() != null ? dto.getValorfreteagregado() : BigDecimal.ZERO;
+                manifesto.setFreteAgregado(freteAgregado);
+                manifesto.setFreteEmpresa(freteEmpresa);
+                manifesto.setValorRecebido(freteEmpresa.subtract(freteAgregado));
+                manifesto.setObservacoes(dto.getObservacoes());
+
+                // Resolve Agregado usando cache em memória
+                Agregado agregado = null;
+                String cnpj = dto.getCnpjagregado();
+                String nomeAgregado = dto.getAgregado();
+
+                if (cnpj != null && !cnpj.isBlank()) {
+                    agregado = cacheAgregadoPorCnpj.get(cnpj);
+                    if (agregado == null) {
+                        agregado = servAgregado.pegarPorCnpj(cnpj);
+                    }
+                }
+                if (agregado == null && nomeAgregado != null && !nomeAgregado.isBlank()) {
+                    agregado = cacheAgregadoPorNome.get(nomeAgregado);
+                    if (agregado == null) {
+                        agregado = servAgregado.pegarPorNome(nomeAgregado);
+                    }
+                }
+                if (agregado == null
+                        && ((nomeAgregado != null && !nomeAgregado.isBlank()) || (cnpj != null && !cnpj.isBlank()))) {
+                    agregado = servAgregado.criarComDadosManifesto(nomeAgregado, cnpj);
+                }
+                if (agregado != null) {
+                    if (cnpj != null && !cnpj.isBlank()) cacheAgregadoPorCnpj.put(cnpj, agregado);
+                    if (nomeAgregado != null && !nomeAgregado.isBlank())
+                        cacheAgregadoPorNome.put(nomeAgregado, agregado);
+                    if (agregado.getNomeAgregado() != null)
+                        cacheAgregadoPorNome.put(agregado.getNomeAgregado(), agregado);
+                }
+                manifesto.setAgregado(agregado);
+
+                // Resolve Veículo usando cache em memória
+                Veiculo veiculo = null;
+                String placa = dto.getPlaca();
+                if (placa != null && !placa.isBlank()) {
+                    veiculo = cacheVeiculoPorPlaca.get(placa);
+                    if (veiculo == null) {
+                        veiculo = sservicoVeiculo.acharPorPlaca(placa);
+                    }
+                    if (veiculo == null) {
+                        veiculo = sservicoVeiculo.criarComPlacaEAgregado(placa, agregado);
+                    }
+                    if (veiculo != null) {
+                        cacheVeiculoPorPlaca.put(placa, veiculo);
+                    }
+                }
+                manifesto.setVeiculo(veiculo);
+
+                // Resolve Motorista usando cache em memória
+                Motorista motorista = null;
+                String cpf = dto.getCpfmotorista();
+                String nomeMotorista = dto.getMotorista();
+
+                if (cpf != null && !cpf.isBlank()) {
+                    motorista = cacheMotoristaPorCpf.get(cpf);
+                    if (motorista == null) {
+                        motorista = servicoMotorista.pegarPorCPF(cpf);
+                    }
+                }
+                if (motorista == null && nomeMotorista != null && !nomeMotorista.isBlank()) {
+                    motorista = cacheMotoristaPorNome.get(nomeMotorista);
+                    if (motorista == null) {
+                        motorista = servicoMotorista.pegarPorNome(nomeMotorista);
+                    }
+                }
+                if (motorista == null
+                        && ((nomeMotorista != null && !nomeMotorista.isBlank()) || (cpf != null && !cpf.isBlank()))) {
+                    motorista = servicoMotorista.criarComDadosManifesto(nomeMotorista, cpf, veiculo, agregado);
+                } else if (motorista != null && motorista.getVeiculo() == null && veiculo != null) {
+                    motorista.setVeiculo(veiculo);
+                    try {
+                        servicoMotorista.salvar(motorista);
+                    } catch (Exception ignored) {
+                    }
+                }
+                if (motorista != null) {
+                    if (cpf != null && !cpf.isBlank()) cacheMotoristaPorCpf.put(cpf, motorista);
+                    if (nomeMotorista != null && !nomeMotorista.isBlank())
+                        cacheMotoristaPorNome.put(nomeMotorista, motorista);
+                    if (motorista.getNomeMotorista() != null)
+                        cacheMotoristaPorNome.put(motorista.getNomeMotorista(), motorista);
+                }
+                manifesto.setMotorista(motorista);
+
+                paraSalvar.add(manifesto);
+
+            } catch (Exception e) {
+                System.err.println("Erro ao preparar manifesto " + dto.getManifestoid() + ": " + e.getMessage());
+            }
+        }
+
+        if (!paraSalvar.isEmpty()) {
+            manifestoRepo.saveAll(paraSalvar);
+        }
+
+        return paraSalvar.size();
+    }
+
     public void SalvaOuNaoNoBancoComAsInformacoesDoManifesto(ManifestoDTO manifesto) {
-        Manifesto manifestoParaSalvar = new Manifesto();
         if (manifestoRepo.existsById(manifesto.getManifestoid())) {
             return;
         }
 
         DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/uuuu").withResolverStyle(ResolverStyle.STRICT);
 
-        manifestoParaSalvar.setAgregado(servAgregado.pegarPorCnpj(manifesto.getCnpjagregado()));
+        Manifesto manifestoParaSalvar = new Manifesto();
+        manifestoParaSalvar.setIdManifesto(manifesto.getManifestoid());
         manifestoParaSalvar.setDataManifesto(LocalDate.parse(manifesto.getData(), FMT));
         manifestoParaSalvar.setDestino(manifesto.getDestino());
+
         BigDecimal freteEmpresa =
                 manifesto.getValorfreteempresa() != null ? manifesto.getValorfreteempresa() : BigDecimal.ZERO;
         BigDecimal freteAgregado =
@@ -67,15 +234,46 @@ public class ServicoManifesto {
         manifestoParaSalvar.setFreteAgregado(freteAgregado);
         manifestoParaSalvar.setFreteEmpresa(freteEmpresa);
         manifestoParaSalvar.setValorRecebido(freteEmpresa.subtract(freteAgregado));
-        manifestoParaSalvar.setIdManifesto(manifesto.getManifestoid());
-        manifestoParaSalvar.setMotorista(servicoMotorista.pegarPorCPF(manifesto.getCpfmotorista()));
         manifestoParaSalvar.setObservacoes(manifesto.getObservacoes());
-        manifestoParaSalvar.setVeiculo(sservicoVeiculo.acharPorPlaca(manifesto.getPlaca()));
-        if (manifestoParaSalvar.getAgregado() == null
-                || manifestoParaSalvar.getMotorista() == null
-                || manifestoParaSalvar.getVeiculo() == null) {
-            return;
+
+        Agregado agregado = null;
+        if (manifesto.getCnpjagregado() != null && !manifesto.getCnpjagregado().isBlank()) {
+            agregado = servAgregado.pegarPorCnpj(manifesto.getCnpjagregado());
         }
+        if (agregado == null
+                && manifesto.getAgregado() != null
+                && !manifesto.getAgregado().isBlank()) {
+            agregado = servAgregado.pegarPorNome(manifesto.getAgregado());
+        }
+        if (agregado == null) {
+            agregado = servAgregado.criarComDadosManifesto(manifesto.getAgregado(), manifesto.getCnpjagregado());
+        }
+        manifestoParaSalvar.setAgregado(agregado);
+
+        Veiculo veiculo = sservicoVeiculo.acharPorPlaca(manifesto.getPlaca());
+        if (veiculo == null) {
+            veiculo = sservicoVeiculo.criarComPlacaEAgregado(manifesto.getPlaca(), agregado);
+        }
+        manifestoParaSalvar.setVeiculo(veiculo);
+
+        Motorista motorista = null;
+        if (manifesto.getCpfmotorista() != null && !manifesto.getCpfmotorista().isBlank()) {
+            motorista = servicoMotorista.pegarPorCPF(manifesto.getCpfmotorista());
+        }
+        if (motorista == null
+                && manifesto.getMotorista() != null
+                && !manifesto.getMotorista().isBlank()) {
+            motorista = servicoMotorista.pegarPorNome(manifesto.getMotorista());
+        }
+        if (motorista == null) {
+            motorista = servicoMotorista.criarComDadosManifesto(
+                    manifesto.getMotorista(), manifesto.getCpfmotorista(), veiculo, agregado);
+        } else if (motorista.getVeiculo() == null && veiculo != null) {
+            motorista.setVeiculo(veiculo);
+            servicoMotorista.salvar(motorista);
+        }
+        manifestoParaSalvar.setMotorista(motorista);
+
         manifestoRepo.save(manifestoParaSalvar);
     }
 
@@ -199,5 +397,117 @@ public class ServicoManifesto {
             anterior = rendimento.rendimentoMedio();
         }
         return map;
+    }
+
+    @Transactional(readOnly = true)
+    public CardsCustoDTO obterCardsCusto(String mesParam) {
+        YearMonth mesSelecionado;
+        if (mesParam != null && !mesParam.isBlank()) {
+            try {
+                mesSelecionado = YearMonth.parse(mesParam.trim());
+            } catch (Exception e) {
+                mesSelecionado = YearMonth.now();
+            }
+        } else {
+            List<LocalDate> datas = manifestoRepo.listarDatasManifestosOrdenadasDesc();
+            if (!datas.isEmpty()) {
+                mesSelecionado = YearMonth.from(datas.get(0));
+            } else {
+                mesSelecionado = YearMonth.now();
+            }
+        }
+
+        YearMonth mesAnterior = mesSelecionado.minusMonths(1);
+
+        LocalDate inicioMes = mesSelecionado.atDay(1);
+        LocalDate fimMes = mesSelecionado.atEndOfMonth();
+        LocalDate inicioMesAnterior = mesAnterior.atDay(1);
+        LocalDate fimMesAnterior = mesAnterior.atEndOfMonth();
+
+        List<Manifesto> manifestos = manifestoRepo.buscarPorPeriodoComMotoristaEVeiculo(inicioMes, fimMes);
+        List<Manifesto> manifestosAnterior =
+                manifestoRepo.buscarPorPeriodoComMotoristaEVeiculo(inicioMesAnterior, fimMesAnterior);
+
+        boolean semDados = manifestos.isEmpty();
+        if (semDados) {
+            return new CardsCustoDTO(mesSelecionado.toString(), true, null, null, null);
+        }
+
+        long totalManifestos = manifestos.size();
+        BigDecimal custoTotal = manifestos.stream()
+                .map(m -> m.getFreteAgregado() != null ? m.getFreteAgregado() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal custoMedio = totalManifestos > 0
+                ? custoTotal.divide(BigDecimal.valueOf(totalManifestos), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        long totalManifestosAnterior = manifestosAnterior.size();
+        BigDecimal custoTotalAnterior = manifestosAnterior.isEmpty()
+                ? null
+                : manifestosAnterior.stream()
+                        .map(m -> m.getFreteAgregado() != null ? m.getFreteAgregado() : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal custoMedioAnterior = (totalManifestosAnterior > 0 && custoTotalAnterior != null)
+                ? custoTotalAnterior.divide(BigDecimal.valueOf(totalManifestosAnterior), 2, RoundingMode.HALF_UP)
+                : null;
+
+        BigDecimal variacaoTotalPercentual = null;
+        if (custoTotalAnterior != null && custoTotalAnterior.compareTo(BigDecimal.ZERO) > 0) {
+            variacaoTotalPercentual = custoTotal
+                    .subtract(custoTotalAnterior)
+                    .divide(custoTotalAnterior, 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100))
+                    .setScale(1, RoundingMode.HALF_UP);
+        }
+
+        BigDecimal variacaoCustoMedioPercentual = null;
+        if (custoMedioAnterior != null && custoMedioAnterior.compareTo(BigDecimal.ZERO) > 0) {
+            variacaoCustoMedioPercentual = custoMedio
+                    .subtract(custoMedioAnterior)
+                    .divide(custoMedioAnterior, 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100))
+                    .setScale(1, RoundingMode.HALF_UP);
+        }
+
+        CustoOperacionalDTO custoDTO = new CustoOperacionalDTO(
+                custoTotal,
+                custoTotalAnterior,
+                variacaoTotalPercentual,
+                custoMedio,
+                custoMedioAnterior,
+                variacaoCustoMedioPercentual,
+                totalManifestos);
+
+        Manifesto melhor = manifestos.stream()
+                .filter(m -> m.getValorRecebido() != null)
+                .max(Comparator.comparing(Manifesto::getValorRecebido))
+                .orElse(null);
+
+        Manifesto pior = manifestos.stream()
+                .filter(m -> m.getValorRecebido() != null)
+                .min(Comparator.comparing(Manifesto::getValorRecebido))
+                .orElse(null);
+
+        ManifestoDestaqueDTO melhorDTO = melhor != null ? toDestaqueDTO(melhor) : null;
+        ManifestoDestaqueDTO piorDTO = pior != null ? toDestaqueDTO(pior) : null;
+
+        return new CardsCustoDTO(mesSelecionado.toString(), false, custoDTO, melhorDTO, piorDTO);
+    }
+
+    private ManifestoDestaqueDTO toDestaqueDTO(Manifesto m) {
+        String motoristaNome = m.getMotorista() != null ? m.getMotorista().getNomeMotorista() : "—";
+        String veiculoRotulo = "—";
+        if (m.getVeiculo() != null) {
+            if (m.getVeiculo().getSubtipoVeiculo() != null) {
+                veiculoRotulo = m.getVeiculo().getSubtipoVeiculo().name();
+            } else if (m.getVeiculo().getTipoVeiculo() != null) {
+                veiculoRotulo = m.getVeiculo().getTipoVeiculo().name();
+            }
+        }
+        String dataStr = m.getDataManifesto() != null ? m.getDataManifesto().toString() : null;
+        return new ManifestoDestaqueDTO(
+                m.getIdManifesto(), m.getValorRecebido(), dataStr, m.getDestino(), motoristaNome, veiculoRotulo);
     }
 }

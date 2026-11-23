@@ -9,7 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -49,6 +49,18 @@ public class Motorista {
     @Column(name = "contato_motorista", length = 20, nullable = false)
     private String contatoMotorista;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_contato", length = 30)
+    private TipoContato tipoContato;
+
+    @Size(max = 20, message = "O contato secundário deve ter no máximo 20 caracteres")
+    @Column(name = "contato_secundario", length = 20)
+    private String contatoSecundario;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_contato_secundario", length = 30)
+    private TipoContato tipoContatoSecundario;
+
     /**
      * Status atual do motorista (obrigatório).
      */
@@ -68,6 +80,9 @@ public class Motorista {
     @Column(name = "manifesto_atual")
     private Long manifestoAtual;
 
+    @Column(name = "data_ultimo_manifesto")
+    private java.time.LocalDate dataUltimoManifesto;
+
     @Column(name = "contador_rota_sp")
     @Builder.Default
     private Integer contadorRotaSp = 0;
@@ -76,8 +91,8 @@ public class Motorista {
     @Builder.Default
     private Float notaMedia = 0.0f;
 
-    @OneToOne(fetch = FetchType.EAGER, orphanRemoval = true)
-    @JoinColumn(name = "veiculo_id", unique = true)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "veiculo_id")
     private Veiculo veiculo;
 
     /**
@@ -98,12 +113,15 @@ public class Motorista {
         if (novoStatus == StatusMotorista.Em_Rota) {
             throw new IllegalArgumentException("Para entrar em rota use iniciarRota(numeroManifesto)");
         }
+        if (this.status == StatusMotorista.Em_Rota) {
+            this.dataUltimoManifesto = java.time.LocalDate.now(java.time.ZoneId.of("America/Sao_Paulo"));
+        }
         registrarStatus(novoStatus, null);
     }
 
     private void registrarStatus(StatusMotorista novoStatus, Long numeroManifesto) {
         this.status = novoStatus;
         this.manifestoAtual = numeroManifesto;
-        this.statusUpdatedAt = LocalDateTime.now();
+        this.statusUpdatedAt = LocalDateTime.now(java.time.ZoneId.of("America/Sao_Paulo"));
     }
 }

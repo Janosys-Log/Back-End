@@ -1,5 +1,6 @@
 package com.fleetops.motorista.service;
 
+import com.fleetops.motorista.domain.Agregado;
 import com.fleetops.motorista.domain.Motorista;
 import com.fleetops.motorista.domain.StatusMotorista;
 import com.fleetops.motorista.domain.Veiculo;
@@ -49,47 +50,131 @@ public class ServicoMotorista {
         return motoristaRepo.findById(id);
     }
 
+    public Optional<Motorista> atualizarContato(Long id, com.fleetops.motorista.dto.AtualizarContatoDTO dto) {
+        return motoristaRepo.findById(id).map(motorista -> {
+            motorista.setContatoMotorista(dto.contatoMotorista().trim());
+            motorista.setTipoContato(dto.tipoContato());
+            String secundario =
+                    dto.contatoSecundario() != null ? dto.contatoSecundario().trim() : null;
+            if (secundario != null && !secundario.isEmpty()) {
+                motorista.setContatoSecundario(secundario);
+                motorista.setTipoContatoSecundario(dto.tipoContatoSecundario());
+            } else {
+                motorista.setContatoSecundario(null);
+                motorista.setTipoContatoSecundario(null);
+            }
+            return motoristaRepo.save(motorista);
+        });
+    }
+
     public Motorista pegarPorCPF(String cpf) {
+        if (cpf == null || cpf.isBlank()) {
+            return null;
+        }
         return motoristaRepo.findBycpfMotorista(cpf);
+    }
+
+    public Motorista pegarPorNome(String nome) {
+        if (nome == null || nome.isBlank()) {
+            return null;
+        }
+        return motoristaRepo.findFirstBynomeMotorista(nome).orElse(null);
+    }
+
+    public Motorista salvar(Motorista motorista) {
+        return motoristaRepo.save(motorista);
+    }
+
+    public Motorista criarComDadosManifesto(String nome, String cpf, Veiculo veiculo, Agregado agregado) {
+        if (nome == null || nome.isBlank()) {
+            nome = "MOTORISTA NÃO INFORMADO";
+        }
+        if (cpf == null || cpf.isBlank()) {
+            cpf = gerarCpfTemporario(nome);
+        }
+        if (motoristaRepo.existsByCpfMotorista(cpf)) {
+            Motorista m = motoristaRepo.findBycpfMotorista(cpf);
+            if (m != null) {
+                if (m.getVeiculo() == null && veiculo != null) {
+                    m.setVeiculo(veiculo);
+                    try {
+                        motoristaRepo.save(m);
+                    } catch (Exception ignored) {
+                    }
+                }
+                return m;
+            }
+        }
+        Motorista motorista = new Motorista();
+        motorista.setNomeMotorista(nome);
+        motorista.setCpfMotorista(cpf);
+        motorista.setContatoMotorista("NÃO INFORMADO");
+        motorista.setVeiculo(veiculo);
+        if (agregado != null) {
+            motorista.setAgregadoId(agregado.getIdAgregado());
+        }
+        try {
+            return motoristaRepo.save(motorista);
+        } catch (Exception e) {
+            Motorista m = motoristaRepo.findBycpfMotorista(cpf);
+            if (m != null) {
+                return m;
+            }
+            return motorista;
+        }
     }
 
     public void SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(VeiculoDTO csvVeiculo) {
         try {
-            Motorista motoristaBanco = new Motorista();
-            Veiculo veiculo = new Veiculo();
-            veiculo.setAgregadoId(
-                    servicoAgregado.pegarPorCnpj(csvVeiculo.getCnpjagregado()).getIdAgregado());
-            veiculo.setPlacaVeiculo(csvVeiculo.getPlaca());
-            veiculo.setSubtipoVeiculo(csvVeiculo.getSubtipoVeiculo());
-            veiculo.setTipoVeiculo(csvVeiculo.getSubtipoVeiculo().getTipo());
+            Veiculo veiculo = servicoVeiculo.acharPorPlaca(csvVeiculo.getPlaca());
+            String cpf = csvVeiculo.getCpfmotorista();
+            String nome = csvVeiculo.getMotorista();
 
-            if (servicoVeiculo.existe(csvVeiculo.getPlaca())) {
-                veiculo = servicoVeiculo.acharPorPlaca(csvVeiculo.getPlaca());
+            if (nome == null || nome.isBlank() || nome.equalsIgnoreCase("NÃO INFORMADO")) {
+                return;
             }
 
-            if (motoristaRepo.existsByCpfMotorista(csvVeiculo.getCpfmotorista())) {
-                motoristaBanco = motoristaRepo.findBycpfMotorista(csvVeiculo.getCpfmotorista());
-                motoristaBanco.setContatoMotorista(csvVeiculo.getContatomotorista());
-                motoristaBanco.setVeiculo(veiculo);
+            Motorista motoristaBanco = null;
+            if (cpf != null && !cpf.isBlank() && motoristaRepo.existsByCpfMotorista(cpf)) {
+                motoristaBanco = motoristaRepo.findBycpfMotorista(cpf);
+            } else if (motoristaRepo.existsBynomeMotorista(nome)) {
+                motoristaBanco = motoristaRepo.findFirstBynomeMotorista(nome).orElse(null);
+            }
+
+            if (motoristaBanco != null) {
+                if (veiculo != null) {
+                    motoristaBanco.setVeiculo(veiculo);
+                }
+                if (csvVeiculo.getContatomotorista() != null
+                        && !csvVeiculo.getContatomotorista().isBlank()) {
+                    motoristaBanco.setContatoMotorista(csvVeiculo.getContatomotorista());
+                }
                 motoristaRepo.save(motoristaBanco);
                 return;
             }
 
+            motoristaBanco = new Motorista();
+            motoristaBanco.setNomeMotorista(nome);
+            motoristaBanco.setCpfMotorista(cpf != null && !cpf.isBlank() ? cpf : gerarCpfTemporario(nome));
+            motoristaBanco.setContatoMotorista(
+                    csvVeiculo.getContatomotorista() != null
+                                    && !csvVeiculo.getContatomotorista().isBlank()
+                            ? csvVeiculo.getContatomotorista()
+                            : "NÃO INFORMADO");
             motoristaBanco.setVeiculo(veiculo);
-            motoristaBanco.setContatoMotorista(csvVeiculo.getContatomotorista());
-            motoristaBanco.setCpfMotorista(csvVeiculo.getCpfmotorista());
-            motoristaBanco.setNomeMotorista(csvVeiculo.getMotorista());
-            motoristaBanco.setAgregadoId(
-                    servicoAgregado.pegarPorCnpj(csvVeiculo.getCnpjagregado()).getIdAgregado());
+            if (veiculo != null && veiculo.getAgregadoId() != null) {
+                motoristaBanco.setAgregadoId(veiculo.getAgregadoId());
+            }
             motoristaRepo.save(motoristaBanco);
 
         } catch (Exception e) {
-            System.out.println("Não foi possivel realizar o salvamento desse Motorista");
-            System.out.println("Informações desse Motorista:");
-            System.out.println("Nome:" + csvVeiculo.getMotorista());
-            System.out.println("Cpf:" + csvVeiculo.getCpfmotorista());
-            System.out.println("Contato:" + csvVeiculo.getContatomotorista());
+            System.out.println("Não foi possivel realizar o salvamento desse Motorista: " + e.getMessage());
         }
+    }
+
+    private String gerarCpfTemporario(String base) {
+        long hash = Math.abs((base != null ? base : "").hashCode()) % 100000000L;
+        return String.format("999%08d", hash);
     }
 
     public List<MotoristaRendimentoDTO> rankingMotorista(LocalDate inicio, LocalDate fim) {

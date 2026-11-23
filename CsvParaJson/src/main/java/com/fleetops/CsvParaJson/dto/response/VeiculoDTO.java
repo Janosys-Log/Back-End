@@ -1,7 +1,13 @@
 package com.fleetops.CsvParaJson.dto.response;
 
+import com.fleetops.CsvParaJson.converters.AgregadoCleanerConversion;
+import com.fleetops.CsvParaJson.converters.DigitsOnlyConversion;
+import com.fleetops.CsvParaJson.converters.MotoristaCleanerConversion;
+import com.fleetops.CsvParaJson.converters.PlacaCleanerConversion;
+import com.fleetops.CsvParaJson.converters.SubtipoVeiculoConversion;
 import com.fleetops.CsvParaJson.enums.SubtipoVeiculo;
 import com.fleetops.CsvParaJson.enums.TipoVeiculo;
+import com.univocity.parsers.annotations.Convert;
 import com.univocity.parsers.annotations.EnumOptions;
 import com.univocity.parsers.annotations.Parsed;
 import com.univocity.parsers.conversions.EnumSelector;
@@ -10,57 +16,57 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
 public class VeiculoDTO {
-    @Parsed(field = "Placa (id)")
+
+    @Parsed(field = {"Placa", "Placa (id)"})
+    @Convert(conversionClass = PlacaCleanerConversion.class)
     @NotBlank(message = "A linha precisa ter um campo 'Placa' preenchido")
     @Pattern(
             regexp = "^[A-Z0-9]{7}$",
             message = "A placa deve ter exatamente 7 caracteres (letras e números, sem hífen, barra ou espaços)")
     private String placa;
 
-    @Parsed(field = "Agregado")
+    @Parsed(field = {"Agregado", "Proprietário"})
+    @Convert(conversionClass = AgregadoCleanerConversion.class)
     @NotBlank(message = "A linha Precisa ter um campo 'Agragado' preenchido")
-    @Pattern(regexp = "^[^0-9]*$", message = "O campo Agragado não pode conter números")
     private String agregado;
 
-    @Parsed(field = "Status do Veículo")
+    @Parsed(field = {"Status do Veículo", "Status"})
     @NotBlank(message = "A linha Precisa ter um campo 'Status Do Veículo' preenchido")
     @Pattern(regexp = "Ativo|Inativo", message = "'Status Do Veículo' deve ser Ativo ou Inativo")
     private String status;
 
-    @Parsed(field = "Motorista Padrão")
+    @Parsed(field = {"Motorista Padrão", "Motorista"})
+    @Convert(conversionClass = MotoristaCleanerConversion.class)
     @NotBlank(message = "A linha Precisa ter um campo 'Motorista Padrão' preenchido")
-    @Pattern(regexp = "^[^0-9]*$", message = "O campo Motorista não pode conter números")
     private String motorista;
 
-    @Parsed(field = "Tipo Veículo")
-    @NotNull(message = "A linha Precisa ter um campo 'Tipo Veículo' preenchido")
-    @EnumOptions(
-            customElement = "descricao",
-            selectors = {EnumSelector.CUSTOM_FIELD})
     private TipoVeiculo tipoVeiculo;
 
-    @Parsed(field = "Subtipo Veículo")
+    @Parsed(field = {"Subtipo Veículo", "Subtipo Veiculo", "Tipo Veículo", "Tipo Veiculo"})
+    @Convert(conversionClass = SubtipoVeiculoConversion.class)
+    @EnumOptions(selectors = {EnumSelector.NAME})
     @NotNull(message = "A linha precisa ter um campo 'Subtipo Veículo'")
-    @EnumOptions(
-            customElement = "descricao",
-            selectors = {EnumSelector.CUSTOM_FIELD})
     private SubtipoVeiculo subtipoVeiculo;
 
-    @Parsed(field = "CPF Motorista")
-    @Pattern(regexp = "^\\d{3}\\.?\\d{3}\\.?\\d{3}\\d{2}$", message = "Formato de do campo 'CPF Motorista' inválido")
+    @Parsed(field = {"CPF Motorista", "CPF"})
+    @Convert(conversionClass = DigitsOnlyConversion.class)
+    @Pattern(regexp = "^\\d{11}$", message = "Formato de do campo 'CPF Motorista' inválido")
     private String cpfmotorista;
 
-    @Parsed(field = "CNPJ Agregado")
-    @Pattern(regexp = "^[A-Z0-9]{12}\\d{2}$", message = "Formato do campo 'CNPJ Agregado' inválido")
+    @Parsed(field = {"CNPJ Agregado", "CNPJ (agregado)", "CPF/CNPJ Agregado"})
+    @Convert(conversionClass = DigitsOnlyConversion.class)
+    @Pattern(regexp = "^[A-Z0-9]{11,14}$", message = "Formato do campo 'CNPJ Agregado' inválido")
     private String cnpjagregado;
 
-    @Parsed(field = "Contato Motorista")
+    @Parsed(field = {"Contato Motorista", "Contato"})
+    @Convert(conversionClass = DigitsOnlyConversion.class)
     @Pattern(
             regexp = "^\\d{10,11}$",
             message = "O campo 'Contato Motorista' deve conter apenas números (10 ou 11 dígitos)")
     private String contatomotorista;
 
-    @Parsed(field = "Contato Agregado")
+    @Parsed(field = {"Contato Agregado"})
+    @Convert(conversionClass = DigitsOnlyConversion.class)
     @Pattern(
             regexp = "^\\d{10,11}$",
             message = "O campo  'Contato do Agregado' deve conter apenas números (10 ou 11 dígitos)")
@@ -123,8 +129,15 @@ public class VeiculoDTO {
         status = Status;
     }
 
+    @NotNull(message = "A linha Precisa ter um campo 'Tipo Veículo' preenchido")
     public TipoVeiculo getTipoVeiculo() {
-        return tipoVeiculo;
+        if (tipoVeiculo != null) {
+            return tipoVeiculo;
+        }
+        if (subtipoVeiculo != null) {
+            return subtipoVeiculo.getTipo();
+        }
+        return null;
     }
 
     public void setTipoVeiculo(TipoVeiculo TipoVeiculo) {
@@ -137,6 +150,9 @@ public class VeiculoDTO {
 
     public void setSubtipoVeiculo(SubtipoVeiculo subtipoVeiculo) {
         this.subtipoVeiculo = subtipoVeiculo;
+        if (subtipoVeiculo != null) {
+            this.tipoVeiculo = subtipoVeiculo.getTipo();
+        }
     }
 
     public String getCnpjagregado() {

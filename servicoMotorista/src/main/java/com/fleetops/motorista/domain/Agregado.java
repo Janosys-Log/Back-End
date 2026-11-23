@@ -50,11 +50,13 @@ public class Agregado {
     @Column(name = "contato_agregado", length = 20)
     private String contatoAgregado;
 
+    @Builder.Default
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
     @JoinColumn(name = "agregado_id")
     private Set<Motorista> motoristas = new HashSet<Motorista>();
 
+    @Builder.Default
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
     @JoinColumn(name = "agregado_id", insertable = false, updatable = false)

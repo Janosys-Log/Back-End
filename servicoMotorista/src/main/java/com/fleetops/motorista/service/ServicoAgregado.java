@@ -12,29 +12,77 @@ public class ServicoAgregado {
     private AgregadoRepository Repo;
 
     public Agregado pegarPorCnpj(String cnpj) {
+        if (cnpj == null || cnpj.isBlank()) {
+            return null;
+        }
         return Repo.findBycnpjAgregado(cnpj);
     }
 
-    public void SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(VeiculoDTO csvVeiculo) {
+    public Agregado pegarPorNome(String nome) {
+        if (nome == null || nome.isBlank()) {
+            return null;
+        }
+        return Repo.findBynomeAgregado(nome);
+    }
+
+    public Agregado criarComDadosManifesto(String nome, String cnpj) {
+        if (nome == null || nome.isBlank()) {
+            nome = "FROTA PRÓPRIA";
+        }
+        if (cnpj == null || cnpj.isBlank()) {
+            cnpj = gerarCnpjTemporario(nome);
+        }
+        if (Repo.existsBycnpjAgregado(cnpj)) {
+            return Repo.findBycnpjAgregado(cnpj);
+        }
+        Agregado agregado = new Agregado();
+        agregado.setNomeAgregado(nome);
+        agregado.setCnpjAgregado(cnpj);
+        agregado.setContatoAgregado("NÃO INFORMADO");
+        return Repo.save(agregado);
+    }
+
+    public Agregado SalvaOuAtualizaNoBancoComAsInformacoesDoCsv(VeiculoDTO csvVeiculo) {
         try {
-            Agregado agregado = new Agregado();
-            agregado.setCnpjAgregado(csvVeiculo.getCnpjagregado());
-            agregado.setContatoAgregado(csvVeiculo.getContatoagregado());
-            agregado.setNomeAgregado(csvVeiculo.getAgregado());
-            if (Repo.existsBycnpjAgregado(csvVeiculo.getCnpjagregado())) {
-                agregado = Repo.findBycnpjAgregado(csvVeiculo.getCnpjagregado());
-                agregado.setContatoAgregado(csvVeiculo.getContatoagregado());
-                Repo.save(agregado);
-                return;
+            String nome = csvVeiculo.getAgregado() != null
+                            && !csvVeiculo.getAgregado().isBlank()
+                    ? csvVeiculo.getAgregado()
+                    : "FROTA PRÓPRIA";
+            String cnpj = csvVeiculo.getCnpjagregado();
+            if (cnpj == null || cnpj.isBlank()) {
+                if (Repo.existsBynomeAgregado(nome)) {
+                    return Repo.findBynomeAgregado(nome);
+                }
+                cnpj = gerarCnpjTemporario(nome);
             }
-            Repo.save(agregado);
+
+            if (Repo.existsBycnpjAgregado(cnpj)) {
+                Agregado agregado = Repo.findBycnpjAgregado(cnpj);
+                if (csvVeiculo.getContatoagregado() != null
+                        && !csvVeiculo.getContatoagregado().isBlank()) {
+                    agregado.setContatoAgregado(csvVeiculo.getContatoagregado());
+                }
+                return Repo.save(agregado);
+            }
+
+            Agregado agregado = new Agregado();
+            agregado.setNomeAgregado(nome);
+            agregado.setCnpjAgregado(cnpj);
+            agregado.setContatoAgregado(
+                    csvVeiculo.getContatoagregado() != null
+                                    && !csvVeiculo.getContatoagregado().isBlank()
+                            ? csvVeiculo.getContatoagregado()
+                            : "NÃO INFORMADO");
+            return Repo.save(agregado);
 
         } catch (Exception e) {
-            System.out.println("Não foi possivel realizar o salvamento desse Agregado");
-            System.out.println("Informações desse agregado:");
-            System.out.println("Nome:" + csvVeiculo.getAgregado());
-            System.out.println("Cnpj:" + csvVeiculo.getCnpjagregado());
-            System.out.println("Contato:" + csvVeiculo.getContatoagregado());
+            System.out.println("Não foi possivel realizar o salvamento desse Agregado: " + e.getMessage());
+            return null;
         }
+    }
+
+    private String gerarCnpjTemporario(String base) {
+        long hash = Math.abs((base != null ? base : "").hashCode()) % 100000000000L;
+        return String.format("TMP%011d", hash);
     }
 }
